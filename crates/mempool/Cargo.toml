@@ -1,0 +1,22 @@
+[package]
+name = "qr-dlt-mempool"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qr-dlt-types = { workspace = true }
+qr-dlt-crypto = { workspace = true }
+qr-dlt-storage = { workspace = true }
+rayon = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "block_validation"
+harness = false
+path = "../../benches/block_validation.rs"

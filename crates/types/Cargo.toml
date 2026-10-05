@@ -1,0 +1,13 @@
+[package]
+name = "qr-dlt-types"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qr-dlt-crypto = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+blake3 = { workspace = true }
+thiserror = { workspace = true }

@@ -1,0 +1,16 @@
+[package]
+name = "qr-dlt-consensus"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qr-dlt-types = { workspace = true }
+qr-dlt-crypto = { workspace = true }
+qr-dlt-storage = { workspace = true }
+qr-dlt-mempool = { workspace = true }
+serde = { workspace = true }
+blake3 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }

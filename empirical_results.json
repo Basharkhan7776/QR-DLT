@@ -1,0 +1,91 @@
+{
+  "timestamp": 1791210344,
+  "system": "Linux x86_64 (AVX2/BMI2/SHA-NI)",
+  "schemes": [
+    {
+      "name": "Ed25519",
+      "public_key_bytes": 32,
+      "signature_bytes": 64,
+      "witness_total_bytes": 96,
+      "lattice_tax_multiplier": 1.0
+    },
+    {
+      "name": "Falcon-512",
+      "public_key_bytes": 897,
+      "signature_bytes": 666,
+      "witness_total_bytes": 1563,
+      "lattice_tax_multiplier": 16.28125
+    },
+    {
+      "name": "ML-DSA-44",
+      "public_key_bytes": 1312,
+      "signature_bytes": 2420,
+      "witness_total_bytes": 3732,
+      "lattice_tax_multiplier": 38.875
+    }
+  ],
+  "batch_scaling": [
+    {
+      "scheme": "Ed25519",
+      "batch_size": 100,
+      "verification_time_ms": 227.311315,
+      "throughput_tps": 439.92530684185255
+    },
+    {
+      "scheme": "Falcon-512",
+      "batch_size": 100,
+      "verification_time_ms": 3.620991,
+      "throughput_tps": 27616.749116471154
+    },
+    {
+      "scheme": "ML-DSA-44",
+      "batch_size": 100,
+      "verification_time_ms": 3.255126,
+      "throughput_tps": 30720.77701446887
+    },
+    {
+      "scheme": "Ed25519",
+      "batch_size": 500,
+      "verification_time_ms": 1028.575762,
+      "throughput_tps": 486.10906310662216
+    },
+    {
+      "scheme": "Falcon-512",
+      "batch_size": 500,
+      "verification_time_ms": 21.063988,
+      "throughput_tps": 23737.195444661287
+    },
+    {
+      "scheme": "ML-DSA-44",
+      "batch_size": 500,
+      "verification_time_ms": 15.448654,
+      "throughput_tps": 32365.27920167026
+    },
+    {
+      "scheme": "Ed25519",
+      "batch_size": 1000,
+      "verification_time_ms": 1994.869606,
+      "throughput_tps": 501.2858970793302
+    },
+    {
+      "scheme": "Falcon-512",
+      "batch_size": 1000,
+      "verification_time_ms": 49.01572,
+      "throughput_tps": 20401.618093134202
+    },
+    {
+      "scheme": "ML-DSA-44",
+      "batch_size": 1000,
+      "verification_time_ms": 28.85023,
+      "throughput_tps": 34661.76872766699
+    }
+  ],
+  "pruning": {
+    "blocks_evaluated": 5,
+    "txs_per_block": 100,
+    "total_txs": 500,
+    "unpruned_witness_bytes": 1876000,
+    "retained_intent_bytes": 32000,
+    "reclaimed_space_percent": 98.32285115303984
+  }
+}

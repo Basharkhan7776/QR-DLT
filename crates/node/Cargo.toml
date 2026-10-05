@@ -1,0 +1,27 @@
+[package]
+name = "qr-dlt-node"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "qr-dlt-node"
+path = "src/main.rs"
+
+[dependencies]
+qr-dlt-crypto = { workspace = true }
+qr-dlt-types = { workspace = true }
+qr-dlt-storage = { workspace = true }
+qr-dlt-mempool = { workspace = true }
+qr-dlt-consensus = { workspace = true }
+qr-dlt-network = { workspace = true }
+clap = { workspace = true }
+tokio = { workspace = true }
+bincode = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = "1.0"
+rand = { workspace = true }

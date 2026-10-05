@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" width="720" height="420" style="background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;">
+  <text x="360.0" y="35" text-anchor="middle" font-size="18" font-weight="bold" fill="#1e293b">Figure 2: Parallel Batch Verification Scaling (Throughput)</text>
+  <g transform="translate(90, 60)">
+    <line x1="0" y1="300.0" x2="580" y2="300.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="304.0" text-anchor="end" font-size="12" fill="#64748b">0</text>
+    <line x1="0" y1="247.31697130434782" x2="580" y2="247.31697130434782" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="251.31697130434782" text-anchor="end" font-size="12" fill="#64748b">7,000</text>
+    <line x1="0" y1="194.63394260869563" x2="580" y2="194.63394260869563" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="198.63394260869563" text-anchor="end" font-size="12" fill="#64748b">14,000</text>
+    <line x1="0" y1="141.95091391304345" x2="580" y2="141.95091391304345" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="145.95091391304345" text-anchor="end" font-size="12" fill="#64748b">21,000</text>
+    <line x1="0" y1="89.2678852173913" x2="580" y2="89.2678852173913" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="93.2678852173913" text-anchor="end" font-size="12" fill="#64748b">28,000</text>
+    <line x1="0" y1="36.58485652173914" x2="580" y2="36.58485652173914" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="40.58485652173914" text-anchor="end" font-size="12" fill="#64748b">35,000</text>
+    <line x1="0" y1="0" x2="0" y2="300" stroke="#94a3b8" stroke-width="1.5"/>
+    <line x1="0" y1="300" x2="580" y2="300" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="-45" y="150.0" text-anchor="middle" transform="rotate(-90, -45, 150.0)" font-size="12" fill="#475569">Throughput (Transactions / Sec)</text>
+    <text x="96.66666666666667" y="325" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">100 tx batch</text>
+    <rect x="46.66666666666667" y="296.6890574908153" width="30" height="3.310942509184701" fill="#3b82f6" rx="3"/>
+    <text x="61.66666666666667" y="290.6890574908153" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">440</text>
+    <rect x="81.66666666666667" y="92.15228768804621" width="30" height="207.84771231195379" fill="#10b981" rx="3"/>
+    <text x="96.66666666666667" y="86.15228768804621" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">27,617</text>
+    <rect x="116.66666666666669" y="68.7909175705721" width="30" height="231.2090824294279" fill="#f59e0b" rx="3"/>
+    <text x="131.66666666666669" y="62.790917570572105" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">30,721</text>
+    <text x="290.0" y="325" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">500 tx batch</text>
+    <rect x="240.0" y="296.34147175416246" width="30" height="3.6585282458375383" fill="#3b82f6" rx="3"/>
+    <text x="255.0" y="290.34147175416246" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">486</text>
+    <rect x="275.0" y="121.35037874780073" width="30" height="178.64962125219927" fill="#10b981" rx="3"/>
+    <text x="290.0" y="115.35037874780073" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">23,737</text>
+    <rect x="310.0" y="56.41415243937303" width="30" height="243.58584756062697" fill="#f59e0b" rx="3"/>
+    <text x="325.0" y="50.41415243937303" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">32,365</text>
+    <text x="483.33333333333337" y="325" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">1000 tx batch</text>
+    <rect x="433.33333333333337" y="296.2272486713491" width="30" height="3.772751328650871" fill="#3b82f6" rx="3"/>
+    <text x="448.33333333333337" y="290.2272486713491" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">501</text>
+    <rect x="468.33333333333337" y="146.45442408023916" width="30" height="153.54557591976084" fill="#10b981" rx="3"/>
+    <text x="483.33333333333337" y="140.45442408023916" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">20,402</text>
+    <rect x="503.33333333333337" y="39.13043478260869" width="30" height="260.8695652173913" fill="#f59e0b" rx="3"/>
+    <text x="518.3333333333334" y="33.13043478260869" text-anchor="middle" font-size="10" font-weight="600" fill="#1e293b">34,662</text>
+    <rect x="360" y="15" width="14" height="14" fill="#3b82f6" rx="2"/>
+    <text x="382" y="26" font-size="12" fill="#334155">Ed25519</text>
+    <rect x="360" y="35" width="14" height="14" fill="#10b981" rx="2"/>
+    <text x="382" y="46" font-size="12" fill="#334155">Falcon-512</text>
+    <rect x="360" y="55" width="14" height="14" fill="#f59e0b" rx="2"/>
+    <text x="382" y="66" font-size="12" fill="#334155">ML-DSA-44</text>
+  </g>
+</svg>
