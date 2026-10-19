@@ -1,7 +1,8 @@
-use crate::admission::validate_admission;
+use crate::admission::{validate_admission, validate_falcon_evm_admission};
 use crate::error::MempoolError;
+use qr_dlt_crypto::Address;
 use qr_dlt_storage::LedgerStore;
-use qr_dlt_types::Transaction;
+use qr_dlt_types::{FalconTransaction, Transaction};
 use std::collections::HashMap;
 use std::sync::RwLock;
 
@@ -9,6 +10,8 @@ use std::sync::RwLock;
 pub struct Mempool {
     transactions: RwLock<HashMap<[u8; 32], Transaction>>,
     highest_pending_nonce: RwLock<HashMap<[u8; 20], u64>>,
+    falcon_transactions: RwLock<HashMap<[u8; 32], FalconTransaction>>,
+    highest_pending_falcon_nonce: RwLock<HashMap<Address, u64>>,
 }
 
 impl Mempool {
@@ -16,6 +19,8 @@ impl Mempool {
         Self {
             transactions: RwLock::new(HashMap::new()),
             highest_pending_nonce: RwLock::new(HashMap::new()),
+            falcon_transactions: RwLock::new(HashMap::new()),
+            highest_pending_falcon_nonce: RwLock::new(HashMap::new()),
         }
     }
 
@@ -88,7 +93,115 @@ impl Mempool {
 
     /// Checks if the mempool is currently empty.
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.len() == 0 && self.falcon_len() == 0
+    }
+
+    /// Validates an incoming EIP-2718 Type 0x46 Falcon EVM transaction and admits it into the pending pool.
+    pub fn admit_falcon_evm(
+        &self,
+        tx: FalconTransaction,
+        store: &LedgerStore,
+    ) -> Result<[u8; 32], MempoolError> {
+        let tx_hash = tx.tx_hash();
+
+        // 1. Check for duplicates in pool
+        {
+            let txs = self.falcon_transactions.read().unwrap();
+            if txs.contains_key(&tx_hash) {
+                return Err(MempoolError::DuplicateTransaction(format!(
+                    "0x{}",
+                    hex::encode(&tx_hash)
+                )));
+            }
+        }
+
+        // 2. Fetch sender and pending nonce
+        let sender = tx
+            .sender()
+            .map_err(|e| MempoolError::AddressMismatch(format!("{:?}", e)))?;
+
+        let pending_nonce = {
+            let nonces = self.highest_pending_falcon_nonce.read().unwrap();
+            nonces.get(&sender).copied()
+        };
+
+        // 3. Validate admission rules
+        validate_falcon_evm_admission(&tx, store, pending_nonce)?;
+
+        // 4. Update pool and sender nonce
+        {
+            let mut nonces = self.highest_pending_falcon_nonce.write().unwrap();
+            nonces.insert(sender, tx.nonce);
+        }
+
+        {
+            let mut txs = self.falcon_transactions.write().unwrap();
+            txs.insert(tx_hash, tx);
+        }
+
+        Ok(tx_hash)
+    }
+
+    /// Extracts up to `limit` highest-paying Falcon EVM transactions to assemble an EVM block proposal.
+    pub fn get_falcon_proposal_batch(&self, limit: usize) -> Vec<FalconTransaction> {
+        let txs = self.falcon_transactions.read().unwrap();
+        let mut candidates: Vec<FalconTransaction> = txs.values().cloned().collect();
+
+        // Sort by gas fee descending, then by nonce ascending
+        candidates.sort_by(|a, b| {
+            b.gas_fee
+                .cmp(&a.gas_fee)
+                .then_with(|| a.nonce.cmp(&b.nonce))
+        });
+
+        candidates.into_iter().take(limit).collect()
+    }
+
+    /// Purges confirmed Falcon EVM transactions from the mempool after a block is committed.
+    pub fn remove_confirmed_falcon(&self, confirmed_hashes: &[[u8; 32]]) {
+        let mut txs = self.falcon_transactions.write().unwrap();
+        let mut nonces = self.highest_pending_falcon_nonce.write().unwrap();
+
+        for hash in confirmed_hashes {
+            if let Some(removed_tx) = txs.remove(hash)
+                && let Ok(sender) = removed_tx.sender()
+            {
+                let remaining_max = txs
+                    .values()
+                    .filter_map(|t| {
+                        if t.sender().ok() == Some(sender) {
+                            Some(t.nonce)
+                        } else {
+                            None
+                        }
+                    })
+                    .max();
+
+                match remaining_max {
+                    Some(max_nonce) => {
+                        nonces.insert(sender, max_nonce);
+                    }
+                    None => {
+                        nonces.remove(&sender);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Number of Falcon EVM transactions currently pending in the mempool.
+    pub fn falcon_len(&self) -> usize {
+        self.falcon_transactions.read().unwrap().len()
+    }
+
+    /// Total number of pending transactions across all execution models.
+    pub fn total_len(&self) -> usize {
+        self.len() + self.falcon_len()
+    }
+
+    /// Fetches a Falcon EVM transaction by its canonical transaction hash.
+    pub fn get_falcon_tx(&self, hash: &[u8; 32]) -> Option<FalconTransaction> {
+        self.falcon_transactions.read().unwrap().get(hash).cloned()
     }
 }
 

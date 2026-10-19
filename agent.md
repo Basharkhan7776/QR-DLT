@@ -398,11 +398,11 @@ qr-dlt/
   * [x] Implement the native Falcon-512 verification precompile at address `0x0000000000000000000000000000000000000015` (`0x15`) with deterministic AVX2 polynomial verification.
   * [x] Enforce strict integer fixed-point arithmetic in consensus verification to prevent multi-platform floating-point consensus forks.
   * [x] Validate precompile execution with NIST FIPS 206 test vectors and calibrate precompile gas pricing ($\approx 3,000\text{ gas}$).
-* [ ] **Week 18: EIP-2718 Type `0x46` Falcon Envelope & Account Identity Model**
-  * Implement EIP-2718 typed transaction envelope Type `0x46` carrying `[chainId, nonce, gasFee, gasLimit, to, value, data, falconPubKey (897 B), falconSig (~666 B)]`.
-  * Establish Ethereum-standard 20-byte address derivation: $\text{Address} = \text{keccak256}(\text{falcon\_pubkey})[12..32]$.
-  * Implement intrinsic gas formula: $21,000 \text{ base} + \text{calldata gas} + \text{Falcon verification intrinsic gas } (\approx 4,000\text{ gas})$.
-  * Integrate Falcon EVM transactions into `crates/mempool` parallel admission validation.
+* [x] **Week 18: EIP-2718 Type `0x46` Falcon Envelope & Account Identity Model** — COMPLETED
+  * [x] Implement EIP-2718 typed transaction envelope Type `0x46` carrying `[chainId, nonce, gasFee, gasLimit, to, value, data, falconPubKey (897 B), falconSig (~666 B)]`.
+  * [x] Establish Ethereum-standard 20-byte address derivation: $\text{Address} = \text{keccak256}(\text{falcon\_pubkey})[12..32]$.
+  * [x] Implement intrinsic gas formula: $21,000 \text{ base} + \text{calldata gas} + \text{Falcon verification intrinsic gas } (\approx 4,000\text{ gas})$.
+  * [x] Integrate Falcon EVM transactions into `crates/mempool` parallel admission validation.
 * [ ] **Week 19: Dual-Root EVM Block Assembly, State Transition & SegWit Pruning**
   * Implement dual-root EVM block headers committing to standard EVM MPT `state_root`, `receipts_root`, and QR-DLT BLAKE3 `witness_root`.
   * Wire PoA consensus proposer with sequential `revm` block state execution and parallel Rayon signature verification.

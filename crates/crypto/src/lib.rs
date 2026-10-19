@@ -11,7 +11,9 @@ pub mod mldsa;
 pub mod scheme;
 pub mod traits;
 
-pub use address::{address_from_public_key, address_to_hex, Address};
+pub use address::{
+    address_from_public_key, address_to_hex, evm_address_from_falcon_pubkey, keccak256, Address,
+};
 pub use ed25519::{Ed25519Signer, Ed25519Verifier};
 pub use error::CryptoError;
 pub use falcon::{Falcon512Signer, Falcon512Verifier};

@@ -1,6 +1,7 @@
 use crate::error::MempoolError;
+use qr_dlt_crypto::Address;
 use qr_dlt_storage::LedgerStore;
-use qr_dlt_types::Transaction;
+use qr_dlt_types::{FalconTransaction, FalconTxError, Transaction};
 
 /// Validates that an incoming transaction satisfies all consensus admission criteria.
 pub fn validate_admission(
@@ -54,6 +55,80 @@ pub fn validate_admission(
         .map_err(|e| MempoolError::InvalidSignature(format!("{:?}", e)))?;
 
     Ok(())
+}
+
+/// Validates that an incoming EIP-2718 Type 0x46 Falcon EVM transaction satisfies all admission criteria:
+/// - Gas fee > 0
+/// - Gas limit >= intrinsic gas (21k base + 4k falcon_verify + calldata + create)
+/// - Correct sender address recovery via Keccak-256
+/// - Nonce sequence continuity
+/// - Account solvency (balance >= value + gas_limit * gas_fee)
+/// - Cryptographic Falcon-512 signature validity over signing hash
+pub fn validate_falcon_evm_admission(
+    tx: &FalconTransaction,
+    store: &LedgerStore,
+    pending_sender_nonce: Option<u64>,
+) -> Result<Address, MempoolError> {
+    // 1. Fee validation
+    if tx.gas_fee == 0 {
+        return Err(MempoolError::ZeroFee);
+    }
+
+    // 2. Intrinsic gas validation
+    tx.validate_intrinsic_gas().map_err(|e| match e {
+        FalconTxError::GasLimitTooLow { intrinsic, limit } => {
+            MempoolError::GasLimitTooLow { intrinsic, limit }
+        }
+        other => MempoolError::InvalidSignature(other.to_string()),
+    })?;
+
+    // 3. Derive 20-byte sender address from Falcon public key using Keccak-256
+    let sender = tx
+        .sender()
+        .map_err(|e| MempoolError::AddressMismatch(format!("{:?}", e)))?;
+
+    // 4. Account nonce check
+    let account = store.get_account(&sender)?;
+    let expected_nonce = match pending_sender_nonce {
+        Some(p) => p + 1,
+        None => account.nonce,
+    };
+
+    if tx.nonce != expected_nonce {
+        return Err(MempoolError::InvalidNonce {
+            expected: expected_nonce,
+            actual: tx.nonce,
+        });
+    }
+
+    // 5. Account solvency check: balance >= value + (gas_limit * gas_fee)
+    let max_gas_cost = (tx.gas_limit as u128)
+        .checked_mul(tx.gas_fee)
+        .ok_or(MempoolError::InsufficientBalance {
+            available: account.balance,
+            required: u64::MAX,
+        })?;
+
+    let total_required = tx
+        .value
+        .checked_add(max_gas_cost)
+        .ok_or(MempoolError::InsufficientBalance {
+            available: account.balance,
+            required: u64::MAX,
+        })?;
+
+    if total_required > account.balance as u128 {
+        return Err(MempoolError::InsufficientBalance {
+            available: account.balance,
+            required: total_required.min(u64::MAX as u128) as u64,
+        });
+    }
+
+    // 6. Cryptographic signature verification
+    tx.verify_signature()
+        .map_err(|e| MempoolError::InvalidSignature(format!("{:?}", e)))?;
+
+    Ok(sender)
 }
 
 mod hex {

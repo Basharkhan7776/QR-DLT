@@ -1,5 +1,5 @@
 use qr_dlt_crypto::CryptoError;
-use qr_dlt_types::Transaction;
+use qr_dlt_types::{FalconTransaction, FalconTxError, Transaction};
 use rayon::prelude::*;
 
 /// Parallel batch verifier leveraging Rayon work-stealing thread pools
@@ -47,6 +47,34 @@ impl BatchVerifier {
     /// Verifies all transactions in parallel, returning Ok(()) only if 100% of signatures are valid.
     pub fn verify_all(&self, txs: &[Transaction]) -> Result<(), (usize, CryptoError)> {
         let failed = self.verify_batch(txs);
+        if let Some(first_failure) = failed.into_iter().next() {
+            Err(first_failure)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Verifies all Falcon EVM transactions in parallel. Returns indices of any invalid transactions.
+    pub fn verify_falcon_evm_batch(&self, txs: &[FalconTransaction]) -> Vec<(usize, FalconTxError)> {
+        let verify_fn = || {
+            txs.par_iter()
+                .enumerate()
+                .filter_map(|(idx, tx)| match tx.verify_signature() {
+                    Ok(()) => None,
+                    Err(e) => Some((idx, e)),
+                })
+                .collect()
+        };
+
+        match &self.thread_pool {
+            Some(pool) => pool.install(verify_fn),
+            None => verify_fn(),
+        }
+    }
+
+    /// Verifies all Falcon EVM transactions in parallel, returning Ok(()) only if 100% of signatures are valid.
+    pub fn verify_falcon_evm_all(&self, txs: &[FalconTransaction]) -> Result<(), (usize, FalconTxError)> {
+        let failed = self.verify_falcon_evm_batch(txs);
         if let Some(first_failure) = failed.into_iter().next() {
             Err(first_failure)
         } else {

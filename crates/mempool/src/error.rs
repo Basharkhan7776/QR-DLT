@@ -1,3 +1,4 @@
+use qr_dlt_types::FalconTxError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -17,8 +18,14 @@ pub enum MempoolError {
     #[error("Zero fee transaction rejected by admission filter")]
     ZeroFee,
 
+    #[error("Intrinsic gas exceeds gas limit: intrinsic {intrinsic}, limit {limit}")]
+    GasLimitTooLow { intrinsic: u64, limit: u64 },
+
     #[error("Sender address {0} mismatch with public key recovery")]
     AddressMismatch(String),
+
+    #[error("Falcon transaction error: {0}")]
+    FalconTx(#[from] FalconTxError),
 
     #[error("Underlying storage error: {0}")]
     Storage(#[from] qr_dlt_storage::StorageError),
