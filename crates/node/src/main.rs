@@ -331,10 +331,10 @@ async fn main() -> Result<()> {
                         info!("Received Block #{} from {} with {} txs", block.header.height, sender, block.transactions.len());
                         if block.verify_roots() {
                             let _ = store.commit_block(&block);
-                            if let Some(depth) = prune_depth {
-                                if block.header.height > depth {
-                                    let _ = store.prune_witnesses_older_than(block.header.height - depth);
-                                }
+                            if let Some(depth) = prune_depth
+                                && block.header.height > depth
+                            {
+                                let _ = store.prune_witnesses_older_than(block.header.height - depth);
                             }
                         }
                     }

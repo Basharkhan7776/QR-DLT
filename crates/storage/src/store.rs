@@ -1,6 +1,9 @@
 use crate::account::AccountState;
 use crate::error::StorageError;
-use qr_dlt_types::{Block, BlockHeader, PrunedBlock, Transaction, TxIntent, WitnessProof};
+use qr_dlt_types::{
+    Block, BlockHeader, EvmBlock, EvmBlockHeader, FalconTransaction, PrunedBlock, PrunedEvmBlock,
+    Transaction, TxIntent, UnsignedFalconTx, WitnessProof,
+};
 use sled::{Db, Tree};
 use std::path::Path;
 
@@ -15,6 +18,13 @@ pub struct LedgerStore {
     witnesses: Tree,
     block_tx_hashes: Tree,
     metadata: Tree,
+
+    // EVM Segregated Witness trees
+    evm_headers: Tree,
+    evm_hash_to_height: Tree,
+    evm_unsigned_txs: Tree,
+    evm_witnesses: Tree,
+    evm_block_tx_hashes: Tree,
 }
 
 impl LedgerStore {
@@ -45,6 +55,12 @@ impl LedgerStore {
         let block_tx_hashes = db.open_tree(b"block_tx_hashes")?;
         let metadata = db.open_tree(b"metadata")?;
 
+        let evm_headers = db.open_tree(b"evm_headers")?;
+        let evm_hash_to_height = db.open_tree(b"evm_hash_to_height")?;
+        let evm_unsigned_txs = db.open_tree(b"evm_unsigned_txs")?;
+        let evm_witnesses = db.open_tree(b"evm_witnesses")?;
+        let evm_block_tx_hashes = db.open_tree(b"evm_block_tx_hashes")?;
+
         Ok(Self {
             db,
             accounts,
@@ -54,6 +70,11 @@ impl LedgerStore {
             witnesses,
             block_tx_hashes,
             metadata,
+            evm_headers,
+            evm_hash_to_height,
+            evm_unsigned_txs,
+            evm_witnesses,
+            evm_block_tx_hashes,
         })
     }
 
@@ -275,6 +296,193 @@ impl LedgerStore {
     /// Checks whether witnesses at `height` have been pruned.
     pub fn is_witness_pruned(&self, height: u64) -> Result<bool, StorageError> {
         match self.metadata.get(b"pruned_height")? {
+            Some(bytes) => {
+                let mut arr = [0u8; 8];
+                arr.copy_from_slice(&bytes);
+                let pruned_height = u64::from_be_bytes(arr);
+                Ok(height <= pruned_height)
+            }
+            None => Ok(false),
+        }
+    }
+
+    // --- EVM Block & Segregated Witness Persistence ---
+
+    /// Commits an EVM block: stores header, index, unsigned transaction intents, and Falcon witnesses.
+    pub fn commit_evm_block(&self, block: &EvmBlock) -> Result<(), StorageError> {
+        let height_bytes = block.header.height.to_be_bytes();
+        let block_hash = block.header.hash();
+
+        // 1. Persist header and hash index
+        let header_bytes = bincode::serialize(&block.header)
+            .map_err(|e| StorageError::Serialization(e.to_string()))?;
+        self.evm_headers.insert(height_bytes, header_bytes)?;
+        self.evm_hash_to_height.insert(block_hash, &height_bytes)?;
+
+        // 2. Persist unsigned transactions and Falcon witnesses separately (SegWit layout)
+        let mut tx_hashes = Vec::with_capacity(block.transactions.len());
+        for tx in &block.transactions {
+            let tx_hash = tx.tx_hash();
+            tx_hashes.push(tx_hash);
+
+            let unsigned_bytes = bincode::serialize(&tx.unsigned_payload())
+                .map_err(|e| StorageError::Serialization(e.to_string()))?;
+            self.evm_unsigned_txs.insert(tx_hash, unsigned_bytes)?;
+
+            let witness_payload = (tx.falcon_public_key.clone(), tx.falcon_signature.clone());
+            let witness_bytes = bincode::serialize(&witness_payload)
+                .map_err(|e| StorageError::Serialization(e.to_string()))?;
+            self.evm_witnesses.insert(tx_hash, witness_bytes)?;
+        }
+
+        let tx_hashes_bytes = bincode::serialize(&tx_hashes)
+            .map_err(|e| StorageError::Serialization(e.to_string()))?;
+        self.evm_block_tx_hashes.insert(height_bytes, tx_hashes_bytes)?;
+
+        // 3. Update latest EVM height
+        self.metadata.insert(b"latest_evm_height", &height_bytes)?;
+        self.db.flush()?;
+
+        Ok(())
+    }
+
+    /// Retrieves the highest EVM block height currently committed to the ledger.
+    pub fn get_latest_evm_height(&self) -> Result<u64, StorageError> {
+        match self.metadata.get(b"latest_evm_height")? {
+            Some(bytes) => {
+                let mut arr = [0u8; 8];
+                arr.copy_from_slice(&bytes);
+                Ok(u64::from_be_bytes(arr))
+            }
+            None => Ok(0),
+        }
+    }
+
+    /// Retrieves the EVM block header at a given height.
+    pub fn get_evm_block_header(&self, height: u64) -> Result<Option<EvmBlockHeader>, StorageError> {
+        let height_bytes = height.to_be_bytes();
+        match self.evm_headers.get(height_bytes)? {
+            Some(bytes) => {
+                let header: EvmBlockHeader = bincode::deserialize(&bytes)
+                    .map_err(|e| StorageError::Serialization(e.to_string()))?;
+                Ok(Some(header))
+            }
+            None => Ok(None),
+        }
+    }
+
+    /// Retrieves the full EVM block (header + transactions with 1.56 KB Falcon witnesses) if not yet pruned.
+    pub fn get_evm_block(&self, height: u64) -> Result<Option<EvmBlock>, StorageError> {
+        let header = match self.get_evm_block_header(height)? {
+            Some(h) => h,
+            None => return Ok(None),
+        };
+
+        let height_bytes = height.to_be_bytes();
+        let tx_hashes: Vec<[u8; 32]> = match self.evm_block_tx_hashes.get(height_bytes)? {
+            Some(bytes) => bincode::deserialize(&bytes)
+                .map_err(|e| StorageError::Serialization(e.to_string()))?,
+            None => return Ok(None),
+        };
+
+        let mut transactions = Vec::with_capacity(tx_hashes.len());
+        for hash in tx_hashes {
+            let unsigned_bytes = self.evm_unsigned_txs.get(hash)?
+                .ok_or_else(|| StorageError::Serialization("Missing unsigned payload for EVM transaction".into()))?;
+            let unsigned: UnsignedFalconTx = bincode::deserialize(&unsigned_bytes)
+                .map_err(|e| StorageError::Serialization(e.to_string()))?;
+
+            let witness_bytes = self.evm_witnesses.get(hash)?
+                .ok_or_else(|| StorageError::Serialization("Falcon witness has been pruned or is missing".into()))?;
+            let (falcon_public_key, falcon_signature): (Vec<u8>, Vec<u8>) = bincode::deserialize(&witness_bytes)
+                .map_err(|e| StorageError::Serialization(e.to_string()))?;
+
+            transactions.push(FalconTransaction {
+                chain_id: unsigned.chain_id,
+                nonce: unsigned.nonce,
+                gas_fee: unsigned.gas_fee,
+                gas_limit: unsigned.gas_limit,
+                to: unsigned.to,
+                value: unsigned.value,
+                data: unsigned.data,
+                falcon_public_key,
+                falcon_signature,
+            });
+        }
+
+        Ok(Some(EvmBlock {
+            header,
+            transactions,
+        }))
+    }
+
+    /// Retrieves a pruned EVM block (header + unsigned transaction intents, without bulky witnesses).
+    pub fn get_pruned_evm_block(&self, height: u64) -> Result<Option<PrunedEvmBlock>, StorageError> {
+        let header = match self.get_evm_block_header(height)? {
+            Some(h) => h,
+            None => return Ok(None),
+        };
+
+        let height_bytes = height.to_be_bytes();
+        let tx_hashes: Vec<[u8; 32]> = match self.evm_block_tx_hashes.get(height_bytes)? {
+            Some(bytes) => bincode::deserialize(&bytes)
+                .map_err(|e| StorageError::Serialization(e.to_string()))?,
+            None => return Ok(None),
+        };
+
+        let mut transactions = Vec::with_capacity(tx_hashes.len());
+        for hash in tx_hashes {
+            let unsigned_bytes = self.evm_unsigned_txs.get(hash)?
+                .ok_or_else(|| StorageError::Serialization("Missing unsigned payload for EVM transaction".into()))?;
+            let unsigned: UnsignedFalconTx = bincode::deserialize(&unsigned_bytes)
+                .map_err(|e| StorageError::Serialization(e.to_string()))?;
+            transactions.push(unsigned);
+        }
+
+        Ok(Some(PrunedEvmBlock { header, transactions }))
+    }
+
+    /// Prunes raw 1.56 KB Falcon witness proofs for all EVM blocks up to `cutoff_height`.
+    pub fn prune_evm_witnesses_older_than(&self, cutoff_height: u64) -> Result<usize, StorageError> {
+        let last_pruned = match self.metadata.get(b"pruned_evm_height")? {
+            Some(bytes) => {
+                let mut arr = [0u8; 8];
+                arr.copy_from_slice(&bytes);
+                u64::from_be_bytes(arr)
+            }
+            None => 0,
+        };
+
+        let start_height = if last_pruned == 0 { 1 } else { last_pruned + 1 };
+        if start_height > cutoff_height {
+            return Ok(0);
+        }
+
+        let mut purged_count = 0;
+
+        for height in start_height..=cutoff_height {
+            let height_bytes = height.to_be_bytes();
+            if let Some(bytes) = self.evm_block_tx_hashes.get(height_bytes)? {
+                let tx_hashes: Vec<[u8; 32]> = bincode::deserialize(&bytes)
+                    .map_err(|e| StorageError::Serialization(e.to_string()))?;
+
+                for hash in tx_hashes {
+                    if self.evm_witnesses.remove(hash)?.is_some() {
+                        purged_count += 1;
+                    }
+                }
+            }
+        }
+
+        self.metadata.insert(b"pruned_evm_height", &cutoff_height.to_be_bytes())?;
+        self.db.flush()?;
+
+        Ok(purged_count)
+    }
+
+    /// Checks whether EVM witnesses at `height` have been pruned.
+    pub fn is_evm_witness_pruned(&self, height: u64) -> Result<bool, StorageError> {
+        match self.metadata.get(b"pruned_evm_height")? {
             Some(bytes) => {
                 let mut arr = [0u8; 8];
                 arr.copy_from_slice(&bytes);

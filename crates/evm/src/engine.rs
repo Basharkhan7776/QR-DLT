@@ -27,6 +27,8 @@ pub type FalconEvm<CTX, INSP = ()> = Evm<
     EthFrame<EthInterpreter>,
 >;
 
+use qr_dlt_types::FalconTransaction;
+
 /// Execution receipt returned by the EVM engine after transacting.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EvmExecutionReceipt {
@@ -37,12 +39,29 @@ pub struct EvmExecutionReceipt {
     pub revert_reason: Option<String>,
 }
 
+/// Result of executing a batch of block transactions through the EVM engine.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlockExecutionResult {
+    pub receipts: Vec<EvmExecutionReceipt>,
+    pub gas_used: u64,
+    pub state_root: [u8; 32],
+    pub receipts_root: [u8; 32],
+}
+
 /// Sovereign Falcon EVM Engine managing execution context and database state.
 pub struct FalconEvmEngine<DB = InMemoryDB> {
     db: DB,
     spec_id: SpecId,
     block_env: BlockEnv,
     cfg_env: CfgEnv,
+}
+
+struct AccountStateEntry {
+    address: [u8; 20],
+    balance: [u8; 32],
+    nonce: u64,
+    code_hash: [u8; 32],
+    storage: Vec<([u8; 32], [u8; 32])>,
 }
 
 impl FalconEvmEngine<InMemoryDB> {
@@ -54,6 +73,91 @@ impl FalconEvmEngine<InMemoryDB> {
             block_env: BlockEnv::default(),
             cfg_env: CfgEnv::default(),
         }
+    }
+
+    /// Computes a deterministic 32-byte cryptographic state root over all accounts and storage in the database.
+    pub fn compute_state_root(&self) -> [u8; 32] {
+        let mut entries: Vec<AccountStateEntry> = self
+            .db
+            .cache
+            .accounts
+            .iter()
+            .map(|(addr, acc)| {
+                let mut address = [0u8; 20];
+                address.copy_from_slice(addr.as_slice());
+
+                let mut code_hash = [0u8; 32];
+                code_hash.copy_from_slice(acc.info.code_hash.as_slice());
+
+                let mut storage: Vec<([u8; 32], [u8; 32])> = acc
+                    .storage
+                    .iter()
+                    .map(|(k, v)| (k.to_be_bytes::<32>(), v.to_be_bytes::<32>()))
+                    .collect();
+                storage.sort_by_key(|a| a.0);
+
+                AccountStateEntry {
+                    address,
+                    balance: acc.info.balance.to_be_bytes::<32>(),
+                    nonce: acc.info.nonce,
+                    code_hash,
+                    storage,
+                }
+            })
+            .collect();
+
+        entries.sort_by_key(|a| a.address);
+
+        let mut leaf_hashes = Vec::with_capacity(entries.len());
+        for entry in entries {
+            let mut hasher = blake3::Hasher::new();
+            hasher.update(&entry.address);
+            hasher.update(&entry.balance);
+            hasher.update(&entry.nonce.to_be_bytes());
+            hasher.update(&entry.code_hash);
+            for (slot, val) in &entry.storage {
+                hasher.update(slot);
+                hasher.update(val);
+            }
+            leaf_hashes.push(*hasher.finalize().as_bytes());
+        }
+
+        qr_dlt_types::compute_merkle_root(&leaf_hashes)
+    }
+
+    /// Sequentially executes a block's Falcon EVM transactions, accumulates gas,
+    /// and derives deterministic state and receipts Merkle roots.
+    pub fn execute_block_transactions(
+        &mut self,
+        txs: &[FalconTransaction],
+        proposer: [u8; 20],
+        block_number: u64,
+        timestamp: u64,
+        gas_limit: u64,
+    ) -> Result<BlockExecutionResult, EvmEngineError> {
+        self.block_env.number = U256::from(block_number);
+        self.block_env.timestamp = U256::from(timestamp);
+        self.block_env.beneficiary = Address::from_slice(&proposer);
+        self.block_env.gas_limit = gas_limit;
+
+        let mut receipts = Vec::with_capacity(txs.len());
+        let mut total_gas_used: u64 = 0;
+
+        for tx in txs {
+            let receipt = self.execute_falcon_tx(tx)?;
+            total_gas_used = total_gas_used.saturating_add(receipt.gas_used);
+            receipts.push(receipt);
+        }
+
+        let state_root = self.compute_state_root();
+        let receipts_root = Self::compute_receipts_root(&receipts);
+
+        Ok(BlockExecutionResult {
+            receipts,
+            gas_used: total_gas_used,
+            state_root,
+            receipts_root,
+        })
     }
 }
 
@@ -93,7 +197,7 @@ where
         ctx.block = self.block_env.clone();
         ctx.cfg = self.cfg_env.clone();
 
-        let spec = (*ctx.cfg.spec()).into();
+        let spec = *ctx.cfg.spec();
         Evm {
             ctx,
             inspector: (),
@@ -146,12 +250,11 @@ where
         &mut self,
         mut tx: TxEnv,
     ) -> Result<EvmExecutionReceipt, EvmEngineError> {
-        if tx.nonce == 0 {
-            if let Ok(current_nonce) = self.get_nonce(tx.caller) {
-                if current_nonce > 0 {
-                    tx.nonce = current_nonce;
-                }
-            }
+        if tx.nonce == 0
+            && let Ok(current_nonce) = self.get_nonce(tx.caller)
+            && current_nonce > 0
+        {
+            tx.nonce = current_nonce;
         }
 
         let mut evm = self.build_evm();
@@ -164,6 +267,50 @@ where
         self.db.commit(state);
 
         Self::receipt_from_result(result)
+    }
+
+    /// Executes a single EIP-2718 Type 0x46 Falcon EVM transaction and commits state changes.
+    pub fn execute_falcon_tx(
+        &mut self,
+        tx: &FalconTransaction,
+    ) -> Result<EvmExecutionReceipt, EvmEngineError> {
+        let sender = tx
+            .sender()
+            .map_err(|e| EvmEngineError::InvalidTransaction(format!("{:?}", e)))?;
+        let caller = Address::from_slice(&sender);
+
+        let kind = match tx.to_address() {
+            Some(to) => TxKind::Call(Address::from_slice(&to)),
+            None => TxKind::Create,
+        };
+
+        let tx_env = TxEnv {
+            caller,
+            gas_limit: tx.gas_limit,
+            gas_price: tx.gas_fee,
+            value: U256::from(tx.value),
+            data: Bytes::copy_from_slice(&tx.data),
+            nonce: tx.nonce,
+            kind,
+            ..Default::default()
+        };
+
+        self.transact_commit(tx_env)
+    }
+
+    /// Computes a deterministic 32-byte BLAKE3 Merkle root over the execution receipts.
+    pub fn compute_receipts_root(receipts: &[EvmExecutionReceipt]) -> [u8; 32] {
+        let receipt_hashes: Vec<[u8; 32]> = receipts
+            .iter()
+            .map(|r| {
+                let mut hasher = blake3::Hasher::new();
+                hasher.update(&[if r.success { 1u8 } else { 0u8 }]);
+                hasher.update(&r.gas_used.to_be_bytes());
+                hasher.update(&r.output);
+                *hasher.finalize().as_bytes()
+            })
+            .collect();
+        qr_dlt_types::compute_merkle_root(&receipt_hashes)
     }
 
     /// Convenience method to transfer balance or call a contract and commit.

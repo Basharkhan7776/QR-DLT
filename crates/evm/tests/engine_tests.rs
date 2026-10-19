@@ -156,3 +156,70 @@ fn test_evm_smart_contract_staticcall_to_falcon_precompile() {
         "Contract call should return 0 for tampered Falcon-512 signature"
     );
 }
+
+#[test]
+fn test_evm_engine_block_transactions_and_state_root() {
+    use qr_dlt_crypto::evm_address_from_falcon_pubkey;
+    use qr_dlt_types::FalconTransaction;
+
+    let mut engine = FalconEvmEngine::new_in_memory(SpecId::CANCUN);
+    let alice = Falcon512Signer::generate();
+    let bob = Falcon512Signer::generate();
+
+    let alice_addr = evm_address_from_falcon_pubkey(&alice.public_key_bytes());
+    let bob_addr = evm_address_from_falcon_pubkey(&bob.public_key_bytes());
+
+    let alice_revm_addr = revm::primitives::Address::from_slice(&alice_addr);
+    let bob_revm_addr = revm::primitives::Address::from_slice(&bob_addr);
+
+    // Fund Alice with 10 ETH (in wei)
+    let initial_balance = U256::from(10_000_000_000_000_000_000u128);
+    engine.set_balance(alice_revm_addr, initial_balance);
+
+    // 1. Transaction 1: Alice sends 1 ETH to Bob
+    let mut tx1 = FalconTransaction::new(
+        1,
+        0, // nonce 0
+        10_000_000_000,
+        50_000,
+        Some(bob_addr),
+        1_000_000_000_000_000_000, // 1 ETH
+        vec![],
+        alice.public_key_bytes(),
+        vec![],
+    );
+    let sig1 = alice.sign(&tx1.signing_hash()).unwrap();
+    tx1.falcon_signature = sig1;
+
+    // 2. Transaction 2: Alice sends 2 ETH to Bob
+    let mut tx2 = FalconTransaction::new(
+        1,
+        1, // nonce 1
+        10_000_000_000,
+        50_000,
+        Some(bob_addr),
+        2_000_000_000_000_000_000, // 2 ETH
+        vec![],
+        alice.public_key_bytes(),
+        vec![],
+    );
+    let sig2 = alice.sign(&tx2.signing_hash()).unwrap();
+    tx2.falcon_signature = sig2;
+
+    let proposer = [0x77u8; 20];
+    let res = engine
+        .execute_block_transactions(&[tx1, tx2], proposer, 1, 1_700_000_000, 30_000_000)
+        .expect("block execution must succeed");
+
+    assert_eq!(res.receipts.len(), 2);
+    assert!(res.receipts[0].success);
+    assert!(res.receipts[1].success);
+    assert!(res.gas_used > 0);
+    assert_ne!(res.state_root, [0u8; 32]);
+    assert_ne!(res.receipts_root, [0u8; 32]);
+
+    // Verify Bob's final balance is 3 ETH
+    let bob_balance = engine.get_balance(bob_revm_addr).unwrap();
+    assert_eq!(bob_balance, U256::from(3_000_000_000_000_000_000u128));
+}
+

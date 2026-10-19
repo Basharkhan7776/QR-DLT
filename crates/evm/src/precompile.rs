@@ -56,10 +56,10 @@ impl<'a> Falcon512CallData<'a> {
         }
 
         // If direct decode failed, try stripping optional 4-byte selector
-        if input.len() >= 4 {
-            if let Some(decoded) = Self::decode_payload(&input[4..]) {
-                return Some(decoded);
-            }
+        if input.len() >= 4
+            && let Some(decoded) = Self::decode_payload(&input[4..])
+        {
+            return Some(decoded);
         }
 
         None
@@ -180,33 +180,31 @@ pub fn falcon512_verify_eth(input: &[u8], gas_limit: u64) -> EthPrecompileResult
     let mut is_valid = false;
     let verifier = Falcon512Verifier;
 
-    if let Some(calldata) = Falcon512CallData::decode_payload(input) {
-        if verifier
+    if let Some(calldata) = Falcon512CallData::decode_payload(input)
+        && verifier
             .verify(
                 calldata.message_hash,
                 calldata.signature,
                 calldata.public_key,
             )
             .is_ok()
-        {
-            is_valid = true;
-        }
+    {
+        is_valid = true;
     }
 
     // Try candidate 2: payload with 4-byte selector stripped
-    if !is_valid && input.len() >= 4 {
-        if let Some(calldata) = Falcon512CallData::decode_payload(&input[4..]) {
-            if verifier
-                .verify(
-                    calldata.message_hash,
-                    calldata.signature,
-                    calldata.public_key,
-                )
-                .is_ok()
-            {
-                is_valid = true;
-            }
-        }
+    if !is_valid
+        && input.len() >= 4
+        && let Some(calldata) = Falcon512CallData::decode_payload(&input[4..])
+        && verifier
+            .verify(
+                calldata.message_hash,
+                calldata.signature,
+                calldata.public_key,
+            )
+            .is_ok()
+    {
+        is_valid = true;
     }
 
     // 3. Return 32-byte EVM boolean result word (1 = valid, 0 = invalid)
@@ -409,7 +407,7 @@ mod tests {
         // 4. Tail: pk bytes + padding to 32 bytes
         calldata.extend_from_slice(&pk);
         let pk_pad = 928 - pk.len();
-        calldata.extend(std::iter::repeat(0u8).take(pk_pad));
+        calldata.extend(std::iter::repeat_n(0u8, pk_pad));
 
         // 5. Tail: sig length (word at 1056..1088)
         let mut sig_len_word = [0u8; 32];
@@ -419,9 +417,9 @@ mod tests {
 
         // 6. Tail: sig bytes + padding to 32 bytes
         calldata.extend_from_slice(&sig);
-        let sig_padded_len = ((sig.len() + 31) / 32) * 32;
+        let sig_padded_len = sig.len().div_ceil(32) * 32;
         let sig_pad = sig_padded_len - sig.len();
-        calldata.extend(std::iter::repeat(0u8).take(sig_pad));
+        calldata.extend(std::iter::repeat_n(0u8, sig_pad));
 
         let result = falcon512_verify_eth(&calldata, 10_000).expect("execution failed");
         assert_eq!(result.gas_used, FALCON512_PRECOMPILE_GAS);

@@ -67,6 +67,17 @@ pub struct UnsignedFalconTx {
     pub data: Vec<u8>,
 }
 
+impl UnsignedFalconTx {
+    /// Computes the deterministic signing/intent hash:
+    /// `keccak256(0x46 || rlp([chain_id, nonce, gas_fee, gas_limit, to, value, data]))`
+    pub fn hash(&self) -> [u8; 32] {
+        let mut buf = Vec::new();
+        buf.push(FALCON_TX_TYPE);
+        self.encode(&mut buf);
+        keccak256(&buf)
+    }
+}
+
 /// Full EIP-2718 Type `0x46` Falcon-512 Enveloped Transaction.
 #[derive(Clone, Debug, PartialEq, Eq, RlpEncodable, RlpDecodable, Serialize, Deserialize)]
 pub struct FalconTransaction {
@@ -143,6 +154,20 @@ impl FalconTransaction {
         buf.push(FALCON_TX_TYPE);
         self.unsigned_payload().encode(&mut buf);
         keccak256(&buf)
+    }
+
+    /// Returns the execution intent hash (identical to the EIP-2718 Type 0x46 signing hash).
+    pub fn intent_hash(&self) -> [u8; 32] {
+        self.signing_hash()
+    }
+
+    /// Computes the 32-byte BLAKE3 commitment over the decoupled Falcon witness payload
+    /// (897-byte public key and ~666-byte signature).
+    pub fn witness_hash(&self) -> [u8; 32] {
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(&self.falcon_public_key);
+        hasher.update(&self.falcon_signature);
+        *hasher.finalize().as_bytes()
     }
 
     /// Encodes the transaction as an EIP-2718 envelope:

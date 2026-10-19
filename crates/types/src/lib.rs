@@ -4,6 +4,7 @@
 //! dual-root `BlockHeader` and `Block`, and domain-separated BLAKE3 Merkle trees.
 
 pub mod block;
+pub mod evm_block;
 pub mod falcon_tx;
 pub mod intent;
 pub mod merkle;
@@ -11,6 +12,7 @@ pub mod transaction;
 pub mod witness;
 
 pub use block::{Block, BlockHeader, PrunedBlock};
+pub use evm_block::{EvmBlock, EvmBlockHeader, PrunedEvmBlock};
 pub use falcon_tx::{
     FalconTransaction, FalconTxError, UnsignedFalconTx, BASE_TRANSACTION_GAS, CALLDATA_NON_ZERO_GAS,
     CALLDATA_ZERO_GAS, CREATE_TRANSACTION_GAS, FALCON512_PUBLIC_KEY_LEN,

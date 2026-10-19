@@ -94,4 +94,64 @@ mod tests {
         assert_eq!(pruned_block.intents.len(), 1);
         assert!(pruned_block.verify_intent_root());
     }
+
+    #[test]
+    fn test_commit_evm_block_and_falcon_witness_pruning() {
+        use qr_dlt_types::{EvmBlock, FalconTransaction};
+
+        let store = LedgerStore::open_temporary().unwrap();
+        let alice = Falcon512Signer::generate();
+        let bob = Falcon512Signer::generate();
+
+        let mut tx1 = FalconTransaction::new(
+            1, 0, 20_000_000_000, 60_000, Some([0x11; 20]), 1000, vec![1, 2, 3],
+            alice.public_key_bytes(), vec![],
+        );
+        let sig1 = alice.sign(&tx1.signing_hash()).unwrap();
+        tx1.falcon_signature = sig1;
+
+        let mut tx2 = FalconTransaction::new(
+            1, 0, 30_000_000_000, 70_000, Some([0x22; 20]), 2000, vec![4, 5, 6],
+            bob.public_key_bytes(), vec![],
+        );
+        let sig2 = bob.sign(&tx2.signing_hash()).unwrap();
+        tx2.falcon_signature = sig2;
+
+        let evm_block = EvmBlock::new(
+            [0u8; 32],
+            1,
+            1_700_000_000,
+            [0x88; 20],
+            30_000_000,
+            130_000,
+            [0xaa; 32],
+            [0xbb; 32],
+            vec![tx1, tx2],
+        );
+
+        // 1. Commit EVM block
+        store.commit_evm_block(&evm_block).expect("commit evm block");
+        assert_eq!(store.get_latest_evm_height().unwrap(), 1);
+
+        // 2. Full EVM block retrieval before pruning
+        let full_block = store.get_evm_block(1).unwrap().expect("evm block 1 exists");
+        assert_eq!(full_block.header.height, 1);
+        assert_eq!(full_block.transactions.len(), 2);
+        assert_eq!(full_block.transactions[0].falcon_public_key.len(), 897);
+        assert!(full_block.verify_roots());
+
+        // 3. Prune Falcon witnesses older than height 1
+        let purged = store.prune_evm_witnesses_older_than(1).expect("prune falcon witnesses");
+        assert_eq!(purged, 2, "Must purge 2 bulky Falcon witnesses");
+        assert!(store.is_evm_witness_pruned(1).unwrap());
+
+        // 4. Full block retrieval should now fail (witnesses purged from disk)
+        assert!(store.get_evm_block(1).is_err());
+
+        // 5. Pruned EVM block is retrievable and auditably valid
+        let pruned_evm = store.get_pruned_evm_block(1).unwrap().expect("pruned evm block exists");
+        assert_eq!(pruned_evm.header.height, 1);
+        assert_eq!(pruned_evm.transactions.len(), 2);
+        assert!(pruned_evm.verify_txs_root());
+    }
 }

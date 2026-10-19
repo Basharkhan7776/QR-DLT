@@ -403,10 +403,10 @@ qr-dlt/
   * [x] Establish Ethereum-standard 20-byte address derivation: $\text{Address} = \text{keccak256}(\text{falcon\_pubkey})[12..32]$.
   * [x] Implement intrinsic gas formula: $21,000 \text{ base} + \text{calldata gas} + \text{Falcon verification intrinsic gas } (\approx 4,000\text{ gas})$.
   * [x] Integrate Falcon EVM transactions into `crates/mempool` parallel admission validation.
-* [ ] **Week 19: Dual-Root EVM Block Assembly, State Transition & SegWit Pruning**
-  * Implement dual-root EVM block headers committing to standard EVM MPT `state_root`, `receipts_root`, and QR-DLT BLAKE3 `witness_root`.
-  * Wire PoA consensus proposer with sequential `revm` block state execution and parallel Rayon signature verification.
-  * Implement Epoch-Based Witness Pruning for EVM blocks: purge raw 1.56 KB Falcon witnesses after confirmation threshold $k$, maintaining constant-growth node storage while preserving cryptographic auditability.
+* [x] **Week 19: Dual-Root EVM Block Assembly, State Transition & SegWit Pruning** — COMPLETED
+  * [x] Implement dual-root EVM block headers committing to standard EVM MPT `state_root`, `receipts_root`, and QR-DLT BLAKE3 `witness_root`.
+  * [x] Wire PoA consensus proposer with sequential `revm` block state execution and parallel Rayon signature verification.
+  * [x] Implement Epoch-Based Witness Pruning for EVM blocks: purge raw 1.56 KB Falcon witnesses after confirmation threshold $k$, maintaining constant-growth node storage while preserving cryptographic auditability.
 * [ ] **Week 20: JSON-RPC Layer, Smart Contract Deployment & Head-to-Head Benchmarking vs. Normal EVM**
   * Implement Ethereum JSON-RPC server (`eth_chainId`, `eth_sendRawTransaction`, `eth_call`, `eth_getBalance`, `eth_estimateGas`) via `jsonrpsee`.
   * Build a lightweight client/wallet CLI tool (`falcon-signer`) to sign and broadcast Type `0x46` transactions.

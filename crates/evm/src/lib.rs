@@ -5,7 +5,7 @@ pub mod error;
 pub mod precompile;
 pub mod provider;
 
-pub use engine::{EvmExecutionReceipt, FalconEvm, FalconEvmEngine};
+pub use engine::{BlockExecutionResult, EvmExecutionReceipt, FalconEvm, FalconEvmEngine};
 pub use error::EvmEngineError;
 pub use precompile::{
     falcon512_precompile, falcon512_verify_eth, Falcon512CallData, FALCON512_PRECOMPILE_ADDRESS,

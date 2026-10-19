@@ -20,6 +20,18 @@ pub enum ConsensusError {
     #[error("No validators registered in consensus schedule")]
     EmptyValidatorSet,
 
+    #[error("EVM execution error: {0}")]
+    Evm(#[from] qr_dlt_evm::EvmEngineError),
+
+    #[error("State root mismatch: expected {expected}, actual {actual}")]
+    StateRootMismatch { expected: String, actual: String },
+
+    #[error("Receipts root mismatch: expected {expected}, actual {actual}")]
+    ReceiptsRootMismatch { expected: String, actual: String },
+
+    #[error("Gas used mismatch: expected {expected}, actual {actual}")]
+    GasUsedMismatch { expected: u64, actual: u64 },
+
     #[error("Storage error: {0}")]
     Storage(#[from] qr_dlt_storage::StorageError),
 }

@@ -10,6 +10,7 @@ qr-dlt-types = { workspace = true }
 qr-dlt-crypto = { workspace = true }
 qr-dlt-storage = { workspace = true }
 qr-dlt-mempool = { workspace = true }
+qr-dlt-evm = { workspace = true }
 serde = { workspace = true }
 blake3 = { workspace = true }
 thiserror = { workspace = true }
