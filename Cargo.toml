@@ -4,6 +4,7 @@ members = [
     "crates/crypto",
     "crates/types",
     "crates/storage",
+    "crates/evm",
     "crates/mempool",
     "crates/consensus",
     "crates/network",
@@ -21,9 +22,13 @@ license = "MIT OR Apache-2.0"
 qr-dlt-crypto = { path = "crates/crypto" }
 qr-dlt-types = { path = "crates/types" }
 qr-dlt-storage = { path = "crates/storage" }
+qr-dlt-evm = { path = "crates/evm" }
 qr-dlt-mempool = { path = "crates/mempool" }
 qr-dlt-consensus = { path = "crates/consensus" }
 qr-dlt-network = { path = "crates/network" }
+
+# EVM
+revm = { version = "43.0.3", default-features = false, features = ["std", "secp256k1"] }
 
 # Serialization & Hashing
 serde = { version = "1.0", features = ["derive"] }

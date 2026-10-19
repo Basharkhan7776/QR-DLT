@@ -1,0 +1,20 @@
+[package]
+name = "qr-dlt-evm"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+qr-dlt-crypto = { workspace = true }
+qr-dlt-types = { workspace = true }
+qr-dlt-storage = { workspace = true }
+revm = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+blake3 = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+hex = "0.4"
+
