@@ -16,6 +16,9 @@ qr-dlt-storage = { workspace = true }
 qr-dlt-mempool = { workspace = true }
 qr-dlt-consensus = { workspace = true }
 qr-dlt-network = { workspace = true }
+qr-dlt-evm = { workspace = true }
+secp256k1 = { workspace = true }
+rayon = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
 bincode = { workspace = true }

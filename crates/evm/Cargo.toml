@@ -19,5 +19,10 @@ blake3 = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
 hex = "0.4"
 
+[[bin]]
+name = "falcon-signer"
+path = "src/bin/falcon_signer.rs"

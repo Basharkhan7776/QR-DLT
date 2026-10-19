@@ -67,6 +67,21 @@ pub enum Commands {
         #[arg(long, default_value_t = 1000)]
         max_batch: usize,
     },
+
+    /// Executes head-to-head empirical benchmarking: Falcon-EVM vs. Normal EVM (secp256k1 baseline)
+    CompareEvm {
+        /// Number of transactions for empirical evaluation batch
+        #[arg(long, default_value_t = 1000)]
+        tx_count: usize,
+
+        /// File path to save structured empirical JSON comparison report
+        #[arg(short, long, default_value = "evm_comparison_report.json")]
+        output_file: PathBuf,
+
+        /// Simulated WAN latency in milliseconds
+        #[arg(long, default_value_t = 100)]
+        wan_latency_ms: u64,
+    },
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]

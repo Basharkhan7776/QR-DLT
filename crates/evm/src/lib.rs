@@ -4,6 +4,7 @@ pub mod engine;
 pub mod error;
 pub mod precompile;
 pub mod provider;
+pub mod rpc;
 
 pub use engine::{BlockExecutionResult, EvmExecutionReceipt, FalconEvm, FalconEvmEngine};
 pub use error::EvmEngineError;
@@ -12,5 +13,6 @@ pub use precompile::{
     FALCON512_PRECOMPILE_GAS, FALCON512_PUBLIC_KEY_SIZE,
 };
 pub use provider::FalconPrecompileProvider;
+pub use rpc::{start_falcon_rpc_server, CallRequest, EthRpcImpl, EthRpcServer};
 
 pub use revm;

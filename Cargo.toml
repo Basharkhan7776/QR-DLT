@@ -45,6 +45,8 @@ pqcrypto-falcon = "0.4"
 pqcrypto-dilithium = "0.5"
 pqcrypto-traits = "0.3"
 rand = "0.8"
+k256 = { version = "0.13", features = ["ecdsa"] }
+secp256k1 = { version = "0.31", default-features = false, features = ["recovery", "std"] }
 
 # Concurrency & Async
 rayon = "1.10"

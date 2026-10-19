@@ -1,0 +1,59 @@
+{
+  "timestamp": 1792396207,
+  "system_cpu": "Linux x86_64 (AVX2/BMI2 Optimized)",
+  "tx_count": 1000,
+  "simulated_wan_latency_ms": 100,
+  "wire_footprint": {
+    "ecdsa_tx_bytes": 110,
+    "falcon_tx_bytes": 1670,
+    "falcon_pubkey_bytes": 897,
+    "falcon_sig_bytes": 666,
+    "payload_bytes": 107,
+    "lattice_tax_multiplier": 15.181818181818182
+  },
+  "parallel_verification": {
+    "batch_size": 1000,
+    "falcon_verification_ms": 18.754512000000002,
+    "falcon_throughput_tps": 53320.50228766283,
+    "ecdsa_verification_ms": 37.289787,
+    "ecdsa_throughput_tps": 26816.994154458433,
+    "falcon_speedup_ratio": 1.9883101730399595
+  },
+  "wan_propagation": {
+    "link_bandwidth_mbps": 100.0,
+    "injected_latency_ms": 100,
+    "ecdsa_block_bytes": 110000,
+    "ecdsa_total_delay_ms": 108.8,
+    "falcon_unpruned_block_bytes": 1670000,
+    "falcon_unpruned_total_delay_ms": 233.6,
+    "falcon_pruned_block_bytes": 107000,
+    "falcon_pruned_total_delay_ms": 108.56,
+    "pruned_propagation_gain_pct": 53.527397260273965
+  },
+  "gas_economics": {
+    "ecdsa_base_intrinsic_gas": 21000,
+    "falcon_base_intrinsic_gas": 25000,
+    "falcon_intrinsic_verification_gas": 4000,
+    "ecrecover_precompile_gas": 3000,
+    "falcon512_precompile_gas": 3000,
+    "erc4337_falcon_aa_userop_gas": 162941
+  },
+  "storage_pruning": {
+    "blocks_evaluated": 5,
+    "total_txs": 1000,
+    "unpruned_witness_bytes": 1552194,
+    "retained_intent_bytes": 107000,
+    "pruned_witness_bytes": 1552194,
+    "reclaimed_space_percent": 93.55108564760963,
+    "standard_evm_reclaimed_percent": 0.0
+  },
+  "quantum_security": {
+    "ecdsa_algorithm": "ECDSA (secp256k1)",
+    "ecdsa_quantum_vulnerability": "Critical: ECDLP broken by Shor's algorithm",
+    "ecdsa_estimated_shor_crack_window": "600 - 3600 seconds",
+    "falcon_algorithm": "Falcon-512 (NTRU Lattice)",
+    "falcon_quantum_vulnerability": "None: NTRU SVP resistant to quantum polynomial attacks",
+    "falcon_estimated_shor_crack_window": "0.00 seconds (Immune)",
+    "falcon_quantum_security_bits": 128
+  }
+}

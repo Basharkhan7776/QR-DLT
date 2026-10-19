@@ -393,11 +393,10 @@ where
     where
         DB: DatabaseCommit,
     {
+        let mut info = self.db.basic(address).ok().flatten().unwrap_or_default();
+        info.balance = balance;
         let mut state = revm::state::EvmState::default();
-        let mut account = revm::state::Account::from(AccountInfo {
-            balance,
-            ..Default::default()
-        });
+        let mut account = revm::state::Account::from(info);
         account.mark_touch();
         state.insert(address, account);
         self.db.commit(state);
