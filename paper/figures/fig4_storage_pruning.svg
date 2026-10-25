@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 420" width="750" height="420" style="background-color: #ffffff; font-family: -apple-system, sans-serif;">
+  <text x="375.0" y="36" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">Epoch Segregated Witness Pruning Space Recovery</text>
+  <g transform="translate(100, 60)">
+    <line x1="0" y1="300.0" x2="600" y2="300.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="304.0" text-anchor="end" font-size="12" fill="#64748b">0 KB</text>
+    <line x1="0" y1="225.0" x2="600" y2="225.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="229.0" text-anchor="end" font-size="12" fill="#64748b">500 KB</text>
+    <line x1="0" y1="150.0" x2="600" y2="150.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="154.0" text-anchor="end" font-size="12" fill="#64748b">1000 KB</text>
+    <line x1="0" y1="75.0" x2="600" y2="75.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="79.0" text-anchor="end" font-size="12" fill="#64748b">1500 KB</text>
+    <line x1="0" y1="0.0" x2="600" y2="0.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="4.0" text-anchor="end" font-size="12" fill="#64748b">2000 KB</text>
+    <line x1="0" y1="0" x2="0" y2="300" stroke="#64748b" stroke-width="1.5"/>
+    <line x1="0" y1="300" x2="600" y2="300" stroke="#64748b" stroke-width="1.5"/>
+    <rect x="105.0" y="25.19999999999999" width="90" height="274.8" fill="#ef4444" rx="2"/>
+    <rect x="105.0" y="20.51249999999999" width="90" height="4.6875" fill="#3b82f6" rx="2"/>
+    <text x="150.0" y="8.512499999999989" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">1863.3 KB</text>
+    <text x="150.0" y="324" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">Unpruned Archival Node</text>
+    <text x="150.0" y="340" text-anchor="middle" font-size="11" fill="#64748b">Raw proofs retained on disk</text>
+    <rect x="405.0" y="295.3125" width="90" height="4.6875" fill="#10b981" rx="2"/>
+    <text x="450.0" y="283.3125" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">31.2 KB</text>
+    <text x="450.0" y="324" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">Pruned Validating Node</text>
+    <text x="450.0" y="340" text-anchor="middle" font-size="11" fill="#64748b">Witnesses purged after epoch (98.3% saved)</text>
+    <rect x="360" y="10" width="14" height="14" fill="#ef4444" rx="2"/>
+    <text x="380" y="22" font-size="11" font-weight="600" fill="#334155">Witness Space (Falcon/ML-DSA)</text>
+    <rect x="360" y="30" width="14" height="14" fill="#10b981" rx="2"/>
+    <text x="380" y="42" font-size="11" font-weight="600" fill="#334155">Execution Intent State</text>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 430" width="750" height="430" style="background-color: #ffffff; font-family: -apple-system, sans-serif;">
+  <text x="375.0" y="36" text-anchor="middle" font-size="15" font-weight="bold" fill="#0f172a">Cryptographic Witness Payload Overhead (The Lattice Tax)</text>
+  <g transform="translate(100, 60)">
+    <line x1="0" y1="300.0" x2="600" y2="300.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="304.0" text-anchor="end" font-size="12" fill="#64748b">0 B</text>
+    <line x1="0" y1="237.5" x2="600" y2="237.5" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="241.5" text-anchor="end" font-size="12" fill="#64748b">1000 B</text>
+    <line x1="0" y1="175.0" x2="600" y2="175.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="179.0" text-anchor="end" font-size="12" fill="#64748b">2000 B</text>
+    <line x1="0" y1="112.5" x2="600" y2="112.5" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="116.5" text-anchor="end" font-size="12" fill="#64748b">3000 B</text>
+    <line x1="0" y1="50.0" x2="600" y2="50.0" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="-12" y="54.0" text-anchor="end" font-size="12" fill="#64748b">4000 B</text>
+    <line x1="0" y1="0" x2="0" y2="300" stroke="#64748b" stroke-width="1.5"/>
+    <line x1="0" y1="300" x2="600" y2="300" stroke="#64748b" stroke-width="1.5"/>
+    <rect x="68.0" y="296.0" width="64" height="4.0" fill="#0284c7" rx="2"/>
+    <rect x="68.0" y="294.0" width="64" height="2.0" fill="#38bdf8" rx="2"/>
+    <text x="100.0" y="276.0" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">96 Bytes</text>
+    <text x="100.0" y="290.0" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">1.0x baseline</text>
+    <text x="100.0" y="324" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Ed25519 (Baseline)</text>
+    <text x="100.0" y="340" text-anchor="middle" font-size="11" fill="#64748b">PK: 32 B | Sig: 64 B</text>
+    <rect x="268.0" y="258.375" width="64" height="41.62500000000001" fill="#059669" rx="2"/>
+    <rect x="268.0" y="202.3125" width="64" height="56.06250000000001" fill="#34d399" rx="2"/>
+    <text x="300.0" y="184.3125" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">1563 Bytes</text>
+    <text x="300.0" y="198.3125" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">16.3x Lattice Tax</text>
+    <text x="300.0" y="324" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">Falcon-512 (FIPS 206)</text>
+    <text x="300.0" y="340" text-anchor="middle" font-size="11" fill="#64748b">PK: 897 B | Sig: 666 B</text>
+    <rect x="468.0" y="148.75" width="64" height="151.25" fill="#d97706" rx="2"/>
+    <rect x="468.0" y="66.75" width="64" height="82.0" fill="#fbbf24" rx="2"/>
+    <text x="500.0" y="48.75" text-anchor="middle" font-size="13" font-weight="bold" fill="#0f172a">3732 Bytes</text>
+    <text x="500.0" y="62.75" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">38.9x Lattice Tax</text>
+    <text x="500.0" y="324" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e293b">ML-DSA-44 (FIPS 204)</text>
+    <text x="500.0" y="340" text-anchor="middle" font-size="11" fill="#64748b">PK: 1312 B | Sig: 2420 B</text>
+    <rect x="15" y="8" width="180" height="48" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="4"/>
+    <rect x="25" y="16" width="14" height="14" fill="#34d399" rx="2"/>
+    <text x="47" y="28" font-size="11" font-weight="600" fill="#334155">Public Key Payload (Top)</text>
+    <rect x="25" y="34" width="14" height="14" fill="#059669" rx="2"/>
+    <text x="47" y="46" font-size="11" font-weight="600" fill="#334155">Signature Payload (Base)</text>
+  </g>
+</svg>
