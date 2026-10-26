@@ -1,6 +1,6 @@
 {
-  "timestamp": 1792396207,
-  "system_cpu": "Linux x86_64 (AVX2/BMI2 Optimized)",
+  "timestamp": 1793029613,
+  "system_cpu": "Linux x86_64 (AVX2/BMI2/SHA-NI, Intel Alder Lake i5-12400)",
   "tx_count": 1000,
   "simulated_wan_latency_ms": 100,
   "wire_footprint": {
@@ -13,11 +13,21 @@
   },
   "parallel_verification": {
     "batch_size": 1000,
-    "falcon_verification_ms": 18.754512000000002,
-    "falcon_throughput_tps": 53320.50228766283,
-    "ecdsa_verification_ms": 37.289787,
-    "ecdsa_throughput_tps": 26816.994154458433,
-    "falcon_speedup_ratio": 1.9883101730399595
+    "iterations": 50,
+    "falcon_verification_ms_mean": 16.48291804,
+    "falcon_verification_ms_std": 1.9106228830876812,
+    "falcon_throughput_sigs_sec_mean": 61331.52310740273,
+    "falcon_throughput_sigs_sec_std": 5896.789480156717,
+    "ecdsa_verification_ms_mean": 19.88457166000001,
+    "ecdsa_verification_ms_std": 0.9827681641611502,
+    "ecdsa_throughput_sigs_sec_mean": 50405.279899727764,
+    "ecdsa_throughput_sigs_sec_std": 2379.061016892326,
+    "falcon_speedup_ratio": 1.2167678312551933,
+    "confidence_interval_95_ms": 0.5295976435932247,
+    "falcon_verification_ms": 16.48291804,
+    "falcon_throughput_tps": 61331.52310740273,
+    "ecdsa_verification_ms": 19.88457166000001,
+    "ecdsa_throughput_tps": 50405.279899727764
   },
   "wan_propagation": {
     "link_bandwidth_mbps": 100.0,
@@ -28,7 +38,14 @@
     "falcon_unpruned_total_delay_ms": 233.6,
     "falcon_pruned_block_bytes": 107000,
     "falcon_pruned_total_delay_ms": 108.56,
-    "pruned_propagation_gain_pct": 53.527397260273965
+    "pruned_propagation_gain_pct": 53.527397260273965,
+    "empirical_measured": false,
+    "empirical_ecdsa_socket_delay_ms_mean": 0.0,
+    "empirical_ecdsa_socket_delay_ms_std": 0.0,
+    "empirical_falcon_unpruned_delay_ms_mean": 0.0,
+    "empirical_falcon_unpruned_delay_ms_std": 0.0,
+    "empirical_falcon_pruned_delay_ms_mean": 0.0,
+    "empirical_falcon_pruned_delay_ms_std": 0.0
   },
   "gas_economics": {
     "ecdsa_base_intrinsic_gas": 21000,
@@ -36,24 +53,30 @@
     "falcon_intrinsic_verification_gas": 4000,
     "ecrecover_precompile_gas": 3000,
     "falcon512_precompile_gas": 3000,
-    "erc4337_falcon_aa_userop_gas": 162941
+    "falcon_calldata_gas_cost": 25520,
+    "falcon_total_onchain_verification_gas": 28520,
+    "ecrecover_total_onchain_verification_gas": 4552,
+    "erc4337_ecdsa_aa_userop_gas": 91768,
+    "erc4337_falcon_aa_userop_gas": 162956,
+    "erc4337_gas_delta": 71188,
+    "evm_bytecode_polynomial_verify_gas_estimate": 3800000
   },
   "storage_pruning": {
     "blocks_evaluated": 5,
     "total_txs": 1000,
-    "unpruned_witness_bytes": 1552194,
+    "unpruned_witness_bytes": 1552162,
     "retained_intent_bytes": 107000,
-    "pruned_witness_bytes": 1552194,
-    "reclaimed_space_percent": 93.55108564760963,
+    "pruned_witness_bytes": 1552162,
+    "reclaimed_space_percent": 93.55096126839935,
     "standard_evm_reclaimed_percent": 0.0
   },
   "quantum_security": {
     "ecdsa_algorithm": "ECDSA (secp256k1)",
     "ecdsa_quantum_vulnerability": "Critical: ECDLP broken by Shor's algorithm",
-    "ecdsa_estimated_shor_crack_window": "600 - 3600 seconds",
+    "ecdsa_estimated_shor_crack_window": "Broken offline via ~1,200 - 1,450 logical qubits (Google Quantum AI 2026)",
     "falcon_algorithm": "Falcon-512 (NTRU Lattice)",
-    "falcon_quantum_vulnerability": "None: NTRU SVP resistant to quantum polynomial attacks",
-    "falcon_estimated_shor_crack_window": "0.00 seconds (Immune)",
+    "falcon_quantum_vulnerability": "Computationally hard: Short Integer Solution (SIS) and NTRU lattice SVP",
+    "falcon_estimated_shor_crack_window": "Computationally infeasible (No known polynomial quantum algorithm)",
     "falcon_quantum_security_bits": 128
   }
 }

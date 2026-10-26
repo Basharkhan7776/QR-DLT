@@ -3270,6 +3270,7 @@ dependencies = [
  "qr-dlt-storage",
  "qr-dlt-types",
  "revm",
+ "secp256k1",
  "serde",
  "serde_json",
  "thiserror 1.0.69",

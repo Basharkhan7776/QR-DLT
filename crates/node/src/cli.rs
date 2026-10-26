@@ -66,6 +66,14 @@ pub enum Commands {
         /// Maximum batch size for scaling measurements
         #[arg(long, default_value_t = 1000)]
         max_batch: usize,
+
+        /// Number of benchmark sample iterations for statistical rigor (mean, std dev)
+        #[arg(long, default_value_t = 50)]
+        iterations: usize,
+
+        /// Number of unmeasured warmup iterations
+        #[arg(long, default_value_t = 5)]
+        warmup: usize,
     },
 
     /// Executes head-to-head empirical benchmarking: Falcon-EVM vs. Normal EVM (secp256k1 baseline)
@@ -81,6 +89,33 @@ pub enum Commands {
         /// Simulated WAN latency in milliseconds
         #[arg(long, default_value_t = 100)]
         wan_latency_ms: u64,
+
+        /// Number of benchmark sample iterations for statistical rigor (mean, std dev)
+        #[arg(long, default_value_t = 50)]
+        iterations: usize,
+
+        /// Number of unmeasured warmup iterations
+        #[arg(long, default_value_t = 5)]
+        warmup: usize,
+    },
+
+    /// Executes live multi-node P2P socket network transit benchmarking
+    BenchP2p {
+        /// Number of transactions per block
+        #[arg(long, default_value_t = 1000)]
+        tx_count: usize,
+
+        /// Simulated WAN latency in milliseconds (e.g. 50, 100, 200)
+        #[arg(long, default_value_t = 100)]
+        latency_ms: u64,
+
+        /// Number of socket transmission trials per block configuration
+        #[arg(long, default_value_t = 50)]
+        trials: usize,
+
+        /// Output JSON report path
+        #[arg(short, long, default_value = "paper/wan_empirical_benchmarks.json")]
+        output_file: PathBuf,
     },
 }
 

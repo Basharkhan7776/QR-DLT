@@ -368,6 +368,7 @@ fn test_solidity_post_quantum_account_abstraction_precompile_0x15() {
 
     assert!(receipt.success, "executeUserOp with valid Falcon-512 signature must succeed");
     assert!(receipt.gas_used >= 3_000, "Must consume precompile gas");
+    println!("  -> Falcon-512 AA executeUserOp Gas Used: {}", receipt.gas_used);
 
     // Verify recipient received 1 ETH
     assert_eq!(
@@ -405,4 +406,131 @@ fn test_solidity_post_quantum_account_abstraction_precompile_0x15() {
         !corrupt_receipt.success,
         "executeUserOp with tampered Falcon-512 signature must revert"
     );
+}
+
+#[test]
+fn test_solidity_ecdsa_account_abstraction_baseline() {
+    let mut engine = FalconEvmEngine::new_in_memory(SpecId::CANCUN);
+    let deployer = address!("1000000000000000000000000000000000000001");
+    let recipient = address!("5555555555555555555555555555555555555555");
+
+    engine.set_balance(deployer, U256::from(100_000_000_000_000_000_000u128));
+
+    // Generate classical ECDSA secp256k1 keypair
+    let secp = secp256k1::Secp256k1::new();
+    let mut rng = secp256k1::rand::rng();
+    let (sk, pk) = secp.generate_keypair(&mut rng);
+    let pk_uncompressed = pk.serialize_uncompressed();
+    let owner = Address::from_slice(&keccak256(&pk_uncompressed[1..])[12..32]);
+
+    // Deploy EcdsaAccountAbstraction contract
+    let aa_bin = load_contract_bin("crates_evm_contracts_EcdsaAccountAbstraction_sol_EcdsaAccountAbstraction.bin");
+    let mut aa_init_code = aa_bin;
+    aa_init_code.extend_from_slice(&encode_address(owner));
+
+    let (aa_addr, deploy_receipt) = engine
+        .deploy_contract(deployer, Bytes::from(aa_init_code), 5_000_000)
+        .expect("ECDSA AA deploy failed");
+    assert!(deploy_receipt.success);
+
+    // Fund the AA contract with 5 ETH
+    engine.set_balance(aa_addr, U256::from(5_000_000_000_000_000_000u128));
+    assert_eq!(engine.get_balance(recipient).unwrap(), U256::ZERO);
+
+    // Construct User Operation: send 1 ETH to recipient
+    let value_to_send = U256::from(1_000_000_000_000_000_000u128); // 1 ETH
+    let call_data = Bytes::new();
+
+    let chain_id = U256::from(1);
+    let nonce = U256::ZERO;
+    let data_hash = keccak256(&call_data);
+
+    let mut op_preimage = Vec::new();
+    op_preimage.extend_from_slice(&encode_u256(chain_id));
+    op_preimage.extend_from_slice(&encode_address(aa_addr));
+    op_preimage.extend_from_slice(&encode_u256(nonce));
+    op_preimage.extend_from_slice(&encode_address(recipient));
+    op_preimage.extend_from_slice(&encode_u256(value_to_send));
+    op_preimage.extend_from_slice(data_hash.as_slice());
+
+    let op_hash = keccak256(&op_preimage);
+
+    // Standard Ethereum Signed Message: "\x19Ethereum Signed Message:\n32" + op_hash
+    let mut eth_signed_preimage = Vec::new();
+    eth_signed_preimage.extend_from_slice(b"\x19Ethereum Signed Message:\n32");
+    eth_signed_preimage.extend_from_slice(op_hash.as_slice());
+    let eth_signed_hash = keccak256(&eth_signed_preimage);
+
+    let msg = secp256k1::Message::from_digest(eth_signed_hash.0);
+    let recoverable_sig = secp.sign_ecdsa_recoverable(msg, &sk);
+    let (rec_id, sig_bytes) = recoverable_sig.serialize_compact();
+
+    let mut ecdsa_sig = Vec::with_capacity(65);
+    ecdsa_sig.extend_from_slice(&sig_bytes);
+    ecdsa_sig.push(i32::from(rec_id) as u8 + 27);
+
+    // Call executeUserOp(address target, uint256 value, bytes calldata data, bytes calldata ecdsaSignature)
+    let exec_selector = &keccak256(b"executeUserOp(address,uint256,bytes,bytes)")[0..4];
+
+    let data_enc = encode_bytes(&call_data);
+    let sig_enc = encode_bytes(&ecdsa_sig);
+
+    let offset_data = 32 * 4;
+    let offset_sig = offset_data + data_enc.len();
+
+    let mut exec_calldata = Vec::new();
+    exec_calldata.extend_from_slice(exec_selector);
+    exec_calldata.extend_from_slice(&encode_address(recipient));
+    exec_calldata.extend_from_slice(&encode_u256(value_to_send));
+    exec_calldata.extend_from_slice(&encode_u256(U256::from(offset_data)));
+    exec_calldata.extend_from_slice(&encode_u256(U256::from(offset_sig)));
+    exec_calldata.extend_from_slice(&data_enc);
+    exec_calldata.extend_from_slice(&sig_enc);
+
+    let receipt = engine
+        .execute_call(
+            deployer,
+            aa_addr,
+            Bytes::from(exec_calldata),
+            U256::ZERO,
+            1_000_000,
+        )
+        .expect("ECDSA AA executeUserOp call failed");
+
+    assert!(receipt.success, "executeUserOp with valid ECDSA signature must succeed");
+    println!("  -> ECDSA AA executeUserOp Gas Used: {}", receipt.gas_used);
+
+    // Verify recipient received 1 ETH
+    assert_eq!(
+        engine.get_balance(recipient).unwrap(),
+        value_to_send,
+        "Recipient must receive transferred ETH from AA wallet"
+    );
+
+    // Verify tampered signature reverts
+    let mut corrupted_sig = ecdsa_sig.clone();
+    corrupted_sig[5] ^= 0xff;
+    let corrupted_sig_enc = encode_bytes(&corrupted_sig);
+
+    let offset_corrupt_sig = offset_data + data_enc.len();
+    let mut corrupt_calldata = Vec::new();
+    corrupt_calldata.extend_from_slice(exec_selector);
+    corrupt_calldata.extend_from_slice(&encode_address(recipient));
+    corrupt_calldata.extend_from_slice(&encode_u256(value_to_send));
+    corrupt_calldata.extend_from_slice(&encode_u256(U256::from(offset_data)));
+    corrupt_calldata.extend_from_slice(&encode_u256(U256::from(offset_corrupt_sig)));
+    corrupt_calldata.extend_from_slice(&data_enc);
+    corrupt_calldata.extend_from_slice(&corrupted_sig_enc);
+
+    let corrupt_receipt = engine
+        .execute_call(
+            deployer,
+            aa_addr,
+            Bytes::from(corrupt_calldata),
+            U256::ZERO,
+            1_000_000,
+        )
+        .expect("Call should return receipt");
+
+    assert!(!corrupt_receipt.success, "Tampered ECDSA signature must revert");
 }

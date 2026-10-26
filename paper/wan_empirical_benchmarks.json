@@ -1,0 +1,16 @@
+{
+  "timestamp": 1793029654,
+  "trials": 50,
+  "tx_count": 1000,
+  "configured_latency_ms": 100,
+  "ecdsa_block_bytes": 172144,
+  "falcon_unpruned_block_bytes": 1692305,
+  "falcon_pruned_block_bytes": 124224,
+  "ecdsa_socket_transit_ms_mean": 0.60773302,
+  "ecdsa_socket_transit_ms_std": 0.03785145470770427,
+  "falcon_unpruned_transit_ms_mean": 5.426806439999999,
+  "falcon_unpruned_transit_ms_std": 0.5666079383391168,
+  "falcon_pruned_transit_ms_mean": 0.3729307,
+  "falcon_pruned_transit_ms_std": 0.01472285893550209,
+  "empirical_pruned_gain_pct": 93.12798965426154
+}

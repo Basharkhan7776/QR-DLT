@@ -1,4 +1,4 @@
-use qr_dlt_types::{Block, Transaction, TxIntent, WitnessProof};
+use qr_dlt_types::{Block, EvmBlock, PrunedEvmBlock, Transaction, TxIntent, WitnessProof};
 use serde::{Deserialize, Serialize};
 
 /// Network wire protocol messages supporting decoupled fast-path and heavy-path gossip.
@@ -21,6 +21,12 @@ pub enum NetworkMessage {
 
     /// Broadcast of a newly proposed and signed block.
     BlockBroadcast(Block),
+
+    /// Broadcast of a newly proposed and signed sovereign Falcon EVM block.
+    EvmBlockBroadcast(EvmBlock),
+
+    /// Broadcast of an epoch-pruned sovereign EVM block.
+    PrunedEvmBlockBroadcast(PrunedEvmBlock),
 
     /// Node liveness and synchronization status ping.
     StatusPing {
