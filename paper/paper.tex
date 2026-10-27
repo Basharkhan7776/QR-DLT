@@ -259,7 +259,7 @@ To provide rigorous end-to-end security, Falcon-EVM addresses all five architect
 \end{itemize}
 
 \subsection{Related Work}
-Recent Ethereum Improvement Proposals explore lattice precompiles. \textbf{EIP-8052} \citep{dubois2025eip8052} specifies splitting Falcon-512 into Hash-to-Point ($1,000\text{ gas}$) and Core Verify ($2,000\text{ gas}$), with precompile addresses TBD. \textbf{EIP-7592} and \textbf{EIP-7619} explore monolithic lattice verification. In smart contracts, \textbf{ZKNOX} demonstrated hybrid ECDSA+Falcon account abstraction. Additionally, STARK-based signature aggregation compiles multiple lattice proofs into a single succinct proof off-chain. Falcon-EVM distinguishes itself by implementing a full sovereign blockchain stack with dual-root consensus and native mempool batch admission.
+Recent Ethereum Improvement Proposals explore lattice precompiles. \textbf{EIP-8052} \citep{dubois2025eip8052} specifies splitting Falcon-512 into Hash-to-Point ($1,000\text{ gas}$) and Core Verify ($2,000\text{ gas}$), with precompile addresses TBD. \textbf{EIP-7592} \citep{eip7592} and \textbf{EIP-7619} \citep{eip7619} explore monolithic lattice verification. In smart contracts, \textbf{ZKNOX} \citep{zknox2024} demonstrated hybrid ECDSA+Falcon account abstraction. Additionally, STARK-based signature aggregation \citep{bensasson2018stark} compiles multiple lattice proofs into a single succinct proof off-chain. Falcon-EVM distinguishes itself by implementing a full sovereign blockchain stack with dual-root consensus and native mempool batch admission.
 
 % =========================================================================
 % SECTION 4: SOVEREIGN FALCON-EVM & HEAD-TO-HEAD
@@ -304,7 +304,7 @@ We conducted head-to-head empirical benchmarking comparing \textbf{Falcon-EVM} a
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.74\columnwidth]{figures/fig5_evm_comparison.png}
+    \includegraphics[width=0.68\columnwidth]{figures/fig5_evm_comparison.png}
     \caption{Head-to-Head Comparison: Falcon-EVM vs. Normal EVM across Verification Speed and WAN Block Propagation Latency.}
     \label{fig:evm_comparison}
 \end{figure}
@@ -314,7 +314,7 @@ We conducted head-to-head empirical benchmarking comparing \textbf{Falcon-EVM} a
 \label{tbl:evm_comparison}
 \centering
 \begingroup
-\renewcommand{\arraystretch}{0.80}
+\renewcommand{\arraystretch}{0.76}
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{p{3.8cm} p{4.0cm} p{4.4cm} p{4.6cm}}
 \toprule
@@ -358,8 +358,8 @@ The impending emergence of cryptanalytically relevant quantum computers poses an
 Our bare-metal multi-trial evaluations ($N = 50$) confirm that Falcon-EVM achieves \textbf{$61,332\text{ sigs/sec}$} parallel verification ($1.22\times$ faster than ECDSA), reclaims \textbf{$93.6\%$} of historical disk space, matches classical block propagation on historical synchronizations, and provides calibrated resilience against quantum algorithms.
 
 \begin{thebibliography}{15}
-\fontsize{6.7pt}{7.6pt}\selectfont
-\setlength{\itemsep}{0pt}
+\fontsize{6.2pt}{7.0pt}\selectfont
+\setlength{\itemsep}{-0.5pt}
 \setlength{\parskip}{0pt}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \providecommand{\url}[1]{\texttt{#1}}
@@ -369,6 +369,11 @@ Our bare-metal multi-trial evaluations ($N = 50$) confirm that Falcon-EVM achiev
 Aggarwal, D., Brennen, G.~K., Lee, T., Santha, M., Tomamichel, M., 2018.
 Quantum attacks on Bitcoin, and how to protect against them.
 Ledger 3, 127--144. \href{https://doi.org/10.5195/ledger.2018.127}{doi:10.5195/ledger.2018.127}.
+
+\bibitem[Ben-Sasson et~al.(2018)]{bensasson2018stark}
+Ben-Sasson, E., Bentov, I., Horesh, Y., Riabzev, M., 2018.
+Scalable, transparent, and post-quantum secure computational integrity.
+IACR Cryptology ePrint Archive 2018/046. \url{https://eprint.iacr.org/2018/046}.
 
 \bibitem[Bernstein et~al.(2012)]{bernstein2012high}
 Bernstein, D.~J., Duif, N., Lange, T., Schwabe, P., Yang, B.-Y., 2012.
@@ -384,6 +389,16 @@ In: Automata, Languages and Programming (ICALP), Springer, pp. 163--169.
 Ducas, L., Kiltz, E., Lepoint, T., Lyubashevsky, V., Schwabe, P., Seiler, G., Stehl{\'e}, D., 2018.
 CRYSTALS-Dilithium: A lattice-based digital signature scheme.
 IACR Transactions on Cryptographic Hardware and Embedded Systems 2018~(1), 238--268.
+
+\bibitem[Dubois et~al.(2024)]{eip7592}
+Dubois, R., Masson, S., 2024.
+EIP-7592: PQC precompiles for Falcon-512 and ML-DSA.
+Ethereum Improvement Proposals. \url{https://eips.ethereum.org/EIPS/eip-7592}.
+
+\bibitem[Dubois et~al.(2025)]{dubois2025eip8052}
+Dubois, R., Masson, S., Sanso, A., van der Wijden, M., et~al., 2025.
+EIP-8052: Falcon-512 precompile for EVM.
+Ethereum Improvement Proposals. \url{https://eips.ethereum.org/EIPS/eip-8052}.
 
 \bibitem[Fouque et~al.(2018)]{fouque2018falcon}
 Fouque, P.-A., Hoffstein, J., Kirchner, P., Lyubashevsky, V., Pornin, T., Prest, T., Ricosset, T., Seiler, G., Whyte, W., Zhang, Z., 2018.
@@ -410,15 +425,15 @@ Proos, J., Zalka, C., 2003.
 Shor's discrete logarithm quantum algorithm for elliptic curves.
 Quantum Information \& Computation 3~(4), 317--344.
 
+\bibitem[Sanso(2024)]{eip7619}
+Sanso, A., 2024.
+EIP-7619: Post-quantum precompiled contracts.
+Ethereum Improvement Proposals. \url{https://eips.ethereum.org/EIPS/eip-7619}.
+
 \bibitem[Shor(1994)]{shor1994algorithms}
 Shor, P.~W., 1994.
 Algorithms for quantum computation: discrete logarithms and factoring.
 In: 35th Annual Symposium on Foundations of Computer Science (FOCS), IEEE, pp. 124--134.
-
-\bibitem[Dubois et~al.(2025)]{dubois2025eip8052}
-Dubois, R., Masson, S., Sanso, A., van der Wijden, M., et~al., 2025.
-EIP-8052: Falcon-512 precompile for EVM.
-Ethereum Improvement Proposals. \url{https://eips.ethereum.org/EIPS/eip-8052}.
 
 \bibitem[Wood(2014)]{wood2014ethereum}
 Wood, G., 2014.
@@ -429,6 +444,11 @@ Ethereum Project Yellow Paper 151, 1--32.
 Wuille, P., Johnson, L., Corallo, M., 2015.
 Segregated witness (consensus layer).
 Bitcoin Improvement Proposal 141 (BIP 141).
+
+\bibitem[ZKNOX(2024)]{zknox2024}
+ZKNOX Foundation, 2024.
+Hybrid post-quantum account abstraction for EVM networks.
+Technical Report. \url{https://zknox.org/whitepaper}.
 
 \end{thebibliography}
 
