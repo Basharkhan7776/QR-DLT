@@ -32,19 +32,15 @@
 
 % Short title & authors
 \shorttitle{Toward Quantum-Resilient Decentralized Execution: Falcon-EVM}
-\shortauthors{B. Khan and Z. Khan}
+\shortauthors{B. Khan}
 
 % Main Title
 \title [mode = title]{Toward Quantum-Resilient Decentralized Execution: Architectural Design, Deterministic Precompiles, and Empirical Evaluation of a Sovereign Falcon-512 EVM Blockchain}
 
-% Author 1
+% Author
 \author[1]{Bashar Khan}
 \cormark[1]
-\ead{bashar@qrdlt.io}
-
-% Author 2
-\author[1]{Zaheer Khan}
-\ead{zaheer@qrdlt.io}
+\ead{basharkhan7776@gmail.com}
 
 \address[1]{Department of Computer Science and Engineering, QR-DLT Research Lab}
 
@@ -100,7 +96,7 @@ Furthermore, naive attempts to integrate post-quantum verification into EVM chai
 Consequently, quantum resilience cannot be treated as an application-layer overlay; it must be embedded natively into the core EVM state transition engine.
 
 \subsection{The Post-Quantum Blockchain Trilemma}
-We formalize the core theoretical challenge of post-quantum smart contract chains as the \textbf{Post-Quantum Blockchain Trilemma} (illustrated in Figure~\ref{fig:architecture}):
+We formalize the core challenge of post-quantum smart contracts as the \textbf{Post-Quantum Block\-chain Trilemma} (Figure~\ref{fig:architecture}):
 
 \begin{figure*}[htbp]
     \centering
@@ -259,7 +255,7 @@ To provide rigorous end-to-end security, Falcon-EVM addresses all five architect
 \end{itemize}
 
 \subsection{Related Work}
-Recent Ethereum Improvement Proposals explore lattice precompiles. \textbf{EIP-8052} \citep{dubois2025eip8052} specifies splitting Falcon-512 into Hash-to-Point ($1,000\text{ gas}$) and Core Verify ($2,000\text{ gas}$), with precompile addresses TBD. \textbf{EIP-7592} \citep{eip7592} and \textbf{EIP-7619} \citep{eip7619} explore monolithic lattice verification. In smart contracts, \textbf{ZKNOX} \citep{zknox2024} demonstrated hybrid ECDSA+Falcon account abstraction. Additionally, STARK-based signature aggregation \citep{bensasson2018stark} compiles multiple lattice proofs into a single succinct proof off-chain. Falcon-EVM distinguishes itself by implementing a full sovereign blockchain stack with dual-root consensus and native mempool batch admission.
+Recent Ethereum Improvement Proposals explore lattice precompiles. \textbf{EIP-8052} \citep{dubois2025eip8052} specifies splitting Falcon-512 into Hash-to-Point ($1,000\text{ gas}$) and Core Verify ($2,000\text{ gas}$), with precompile addresses TBD. \textbf{EIP-7592} \citep{eip7592} and \textbf{EIP-7619} \citep{eip7619} explore monolithic lattice verification. In smart contracts, \textbf{ZKNOX} \citep{zknox2024} demonstrated hybrid ECDSA and Falcon account abstraction. Additionally, STARK-based signature aggregation \citep{bensasson2018stark} compiles multiple lattice proofs into a single succinct proof off-chain. Falcon-EVM distinguishes itself by implementing a full sovereign blockchain stack with dual-root consensus and native mempool batch admission.
 
 % =========================================================================
 % SECTION 4: SOVEREIGN FALCON-EVM & HEAD-TO-HEAD
@@ -280,7 +276,7 @@ Under Ethereum Improvement Proposal 2718, we introduce Type \texttt{0x46} (ASCII
 where $C$ is chain ID, $N$ is nonce, $G_{\text{fee}}$ is gas fee, $G_{\text{limit}}$ is gas limit, $T$ is recipient address, $V$ is value, $D$ is calldata, $pk_{\text{falcon}}$ is 897 bytes, and $sig_{\text{falcon}}$ is $\approx 666\text{ B}$.
 
 \subsubsection{Address Derivation \& Intrinsic Gas}
-Falcon-EVM establishes an Ethereum-compatible 20-byte address format: $\text{Address}_{\text{falcon}} = \text{Keccak-256}(pk_{\text{falcon}})[12..31]$. To account for post-quantum signature verification during admission, intrinsic gas is calibrated as:
+Falcon-EVM establishes a standard 20-byte address format: $\text{Address} = \text{Keccak-256}(pk)[12..31]$. To account for signature verification during admission, intrinsic gas is calibrated as:
 \begin{align}
     G_{\text{intrinsic}} &= 21,000 + G_{\text{calldata}}(D) + 4,000 \nonumber \\
     &\quad + [32,000 \text{ if contract creation}]
@@ -292,7 +288,7 @@ The $+4,000\text{ gas}$ intrinsic surcharge directly compensates validating node
 To enable smart contracts to natively verify Falcon signatures without bytecode emulation, we embed a precompile at canonical address $\mathtt{0x00\dots0015} \in \mathbb{B}_{20}$ (\texttt{0x15}). The precompile accepts formatted input $\text{Input} = \text{msg\_hash}_{32\text{B}} \parallel pk_{897\text{B}} \parallel sig_{\text{var}}$.
 CPU execution gas is calibrated at exactly \textbf{$3,000\text{ gas}$}, matching both `ecrecover` (\texttt{0x01}) execution parity and the total gas recommended in EIP-8052 \citep{dubois2025eip8052} ($1,000\text{ gas}$ hash-to-point $+ 2,000\text{ gas}$ core verify). Passing $1,595\text{ B}$ of non-zero input via `STATICCALL` incurs $25,520\text{ gas}$ in calldata ($16\text{ gas/byte}$), totaling \textbf{$28,520\text{ gas}$} on-chain ($>130\times$ cheaper than interpreted bytecode at $\approx 3.8\text{M gas}$).
 
-\subsection{Smart Contract Deployment \& Account Abstraction Baseline}
+\subsection{Smart Contracts \& Account Abstraction Baseline}
 We validated Turing-complete execution via compiled Solidity contracts:
 (1)~\textbf{ERC-20 Token} ($10^6\text{ FALC}$ supply): validated minting, transfers, and approvals.
 (2)~\textbf{AMM DEX ($x \cdot y = k$)}: validated constant-product swaps ($0.3\%$ fee).
@@ -338,7 +334,7 @@ Metric / Dimension & Normal EVM ($\text{secp256k1}$) & Falcon-EVM (QR-DLT Sovere
 \end{table*}
 
 \subsubsection{Key Empirical Takeaways}
-\textbf{1. Verification Throughput}: Falcon-EVM achieves \textbf{$61,332\text{ sigs/sec}$}, outperforming Normal EVM's $50,405\text{ sigs/sec}$ by \textbf{$1.22\times$}. AVX2 polynomial NTT transformations execute with fewer CPU cycles than 256-bit elliptic-curve point additions on secp256k1.
+\textbf{1. Verification Throughput}: Falcon-EVM achieves \textbf{$61,332\text{ sigs/sec}$}, exceeding Normal EVM ($50,405\text{ sigs/sec}$) by \textbf{$1.22\times$}. AVX2 NTT polynomial transforms require fewer CPU cycles than point additions on secp256k1.
 
 \textbf{2. Consensus Wire Reality}: Newly proposed blocks must transmit full $1.63\text{ MB}$ witness payloads on the consensus wire so peer validators can independently verify the block. SegWit epoch pruning operates retrospectively after confirmation ($k > 100$) or during historical synchronization, reducing transit delay by $53.5\%$ and empirical socket transit by $93.1\%$.
 
@@ -353,7 +349,7 @@ We identify two primary transition vectors:
 
 \section{Conclusion}
 \label{sec:conclusion}
-The impending emergence of cryptanalytically relevant quantum computers poses an existential threat to decentralized state machines anchored on classical elliptic-curve signatures. In this paper, we addressed the Post-Quantum Blockchain Trilemma by presenting \textbf{Falcon-EVM}, a sovereign post-quantum EVM blockchain. By combining EIP-2718 Type \texttt{0x46} typed transactions, an integer-only deterministic AVX2 Falcon-512 precompile (\texttt{0x15}), and a Dual-Root Segregated Witness consensus architecture, Falcon-EVM reconciles cryptographic hardness, execution determinism, and storage bloat. 
+The rise of cryptanalytically relevant quantum computers threatens decentralized state machines anchored on elliptic-curve signatures. In this paper, we addressed the Post-Quantum Blockchain Trilemma by presenting \textbf{Falcon-EVM}, a sovereign post-quantum EVM blockchain. Combining EIP-2718 Type \texttt{0x46} transactions, an integer-only AVX2 Falcon-512 precompile (\texttt{0x15}), and a Dual-Root Segregated Witness architecture, Falcon-EVM reconciles cryptographic hardness, determinism, and state growth. 
 
 Our bare-metal multi-trial evaluations ($N = 50$) confirm that Falcon-EVM achieves \textbf{$61,332\text{ sigs/sec}$} parallel verification ($1.22\times$ faster than ECDSA), reclaims \textbf{$93.6\%$} of historical disk space, matches classical block propagation on historical synchronizations, and provides calibrated resilience against quantum algorithms.
 
